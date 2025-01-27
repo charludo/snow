@@ -1,0 +1,26 @@
+name: Run clippy and tests
+run-name: ${{ forgejo.actor }} is running clippy and tests
+on: [push]
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install rustup and rust
+        uses: https://github.com/dtolnay/rust-toolchain@1.84.1
+        with:
+          components: clippy, rustfmt
+          toolchain: nightly
+      - name: Fetch dependencies
+        run: cargo fetch
+      - name: Export path
+        run: |
+          export PATH=$PATH:$HOME/.cargo/bin
+          export PATH=$PATH:$HOME/.rustup/bin
+      - name: Check clippy errors
+        run: cargo clippy -- --deny warnings
+      - name: Check formatting
+        run: cargo fmt --check
+      - name: Check tests
+        run: cargo test
