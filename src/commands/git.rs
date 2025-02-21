@@ -37,30 +37,17 @@ pub(crate) fn git_add() -> Result<()> {
 pub(crate) fn git_commit(message: &Option<String>) -> Result<()> {
     let extra_args = match message {
         Some(message) => vec![message.as_str()],
-        None => vec!["commit", "--amend", "-C", "HEAD"],
+        None => vec!["--amend", "-C", "HEAD"],
     };
 
     git_add()?;
     let mut args = vec!["submodule", "foreach", "git", "commit"];
     args.extend(extra_args.clone());
-    SnowCommand::new_git(
-        "git".to_string(),
-        vec![
-            "submodule",
-            "foreach",
-            "git",
-            "commit",
-            "--amend",
-            "-C",
-            "HEAD",
-        ],
-    )
-    .run_silent()?;
+    SnowCommand::new_git("git".to_string(), args).run_silent()?;
     git_add()?;
     let mut args = vec!["commit"];
     args.extend(extra_args);
-    SnowCommand::new_git("git".to_string(), vec!["commit", "--amend", "-C", "HEAD"])
-        .run_silent()?;
+    SnowCommand::new_git("git".to_string(), args).run_silent()?;
     Ok(())
 }
 
