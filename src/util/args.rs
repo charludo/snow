@@ -17,6 +17,9 @@ pub(crate) struct Args {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum GitSubcommands {
+    /// Pull new changes.
+    Pull,
+
     /// Stage all files.
     Add,
 

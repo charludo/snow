@@ -24,6 +24,16 @@ pub(super) fn exist_untracked() -> Result<bool> {
         .contains("??"))
 }
 
+pub(crate) fn git_pull() -> Result<()> {
+    SnowCommand::new_git(
+        "git".to_string(),
+        vec!["submodule", "foreach", "git", "pull"],
+    )
+    .run_silent()?;
+    SnowCommand::new_git("git".to_string(), vec!["pull"]).run_silent()?;
+    Ok(())
+}
+
 pub(crate) fn git_add() -> Result<()> {
     SnowCommand::new_git(
         "git".to_string(),

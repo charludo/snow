@@ -49,6 +49,7 @@ fn main() {
         Commands::Git { subcommand } => match subcommand {
             GitSubcommands::Add => git_add(),
             GitSubcommands::Commit { message } => git_commit(message),
+            GitSubcommands::Pull => git_pull(),
             GitSubcommands::Push => git_push(),
             GitSubcommands::All { message } => git_all(message),
         },
