@@ -60,7 +60,7 @@ impl SnowCommand {
         let progress_refresh = Arc::clone(&progress);
         let handle_refresh = thread::spawn(move || {
             // give sudo time to ask for a password
-            std::thread::sleep(std::time::Duration::from_secs_f32(0.5));
+            std::thread::sleep(std::time::Duration::from_secs_f32(0.75));
             let exit_status = loop {
                 match child.try_wait() {
                     Ok(None) => {
