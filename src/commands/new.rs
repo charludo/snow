@@ -161,17 +161,6 @@ pub(crate) fn vm_new(
     agenix_rekey(false, false)?;
     git_add()?;
 
-    // Establish an SSH connection to the
-    let command = SnowCommand::new(
-        "ssh".to_string(),
-        vec![
-            &vm_config.proxmox_host,
-            &format!("qm start {}", vm_config.id),
-        ],
-        false,
-    );
-    command.run_silent().or_cleanup()?;
-
     // Rebuild the host, with correct secrets this time
     unsafe {
         std::env::set_var(
