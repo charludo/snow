@@ -3,40 +3,40 @@ use crate::SnowError;
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 
-use super::util::read_from_repl;
+use super::read_from_repl;
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct SnowConfig {
-    pub(super) tags: Vec<String>,
-    pub(super) use_remote_sudo: bool,
-    pub(super) build_on_target: bool,
-    pub(super) target_host: Option<String>,
-    pub(super) build_host: Option<String>,
+pub(crate) struct SnowConfig {
+    pub(crate) tags: Vec<String>,
+    pub(crate) use_remote_sudo: bool,
+    pub(crate) build_on_target: bool,
+    pub(crate) target_host: Option<String>,
+    pub(crate) build_host: Option<String>,
 
-    pub(super) vm: Option<VmConfig>,
+    pub(crate) vm: Option<VmConfig>,
 }
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct VmConfig {
-    pub(super) id: Option<usize>,
-    pub(super) ip: Option<String>,
-    pub(super) proxmox_host: Option<String>,
-    pub(super) proxmox_image_store: Option<String>,
-    pub(super) resize_disk_by: Option<String>,
+pub(crate) struct VmConfig {
+    pub(crate) id: Option<usize>,
+    pub(crate) ip: Option<String>,
+    pub(crate) proxmox_host: Option<String>,
+    pub(crate) proxmox_image_store: Option<String>,
+    pub(crate) resize_disk_by: Option<String>,
 }
 
-pub(super) struct VmConfigResolved {
-    pub(super) id: usize,
-    pub(super) ip: String,
-    pub(super) proxmox_host: String,
-    pub(super) proxmox_image_store: String,
-    pub(super) resize_disk_by: String,
+pub(crate) struct VmConfigResolved {
+    pub(crate) id: usize,
+    pub(crate) ip: String,
+    pub(crate) proxmox_host: String,
+    pub(crate) proxmox_image_store: String,
+    pub(crate) resize_disk_by: String,
 }
 
 impl SnowConfig {
-    pub(super) fn get_snow_config(host: &str) -> Result<Self> {
+    pub(crate) fn get_snow_config(host: &str) -> Result<Self> {
         match read_from_repl(
             &format!("nixosConfigurations.{host}.config.snow"),
             vec!["--json"],

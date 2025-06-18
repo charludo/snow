@@ -1,5 +1,4 @@
 use crate::commands::util::wrap;
-use crate::commands::{snow_command::SnowCommand, snow_config::SnowConfig};
 use crate::util::Result;
 use crate::{SnowError, LOG_LEVEL};
 use gethostname::gethostname;
@@ -7,6 +6,8 @@ use inquire::Confirm;
 use log::LevelFilter;
 use users::get_current_username;
 
+use super::runners::SnowCommand;
+use super::util::SnowConfig;
 use super::{exist_untracked, git_add, RebuildMode};
 
 pub(crate) fn rebuild(

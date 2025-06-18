@@ -5,7 +5,7 @@ use std::io::{stderr, IsTerminal};
 use std::process::ExitStatus;
 
 #[derive(Debug)]
-pub(super) struct Progress {
+pub(crate) struct Progress {
     tasks_done: i32,
     tasks_total: usize,
 
@@ -17,7 +17,7 @@ pub(super) struct Progress {
 }
 
 impl Progress {
-    pub(super) fn new(name: &str, initial_total: usize) -> Result<Self> {
+    pub(crate) fn new(name: &str, initial_total: usize) -> Result<Self> {
         term::init(stderr().is_terminal());
         term::hide_cursor()?;
 
@@ -61,11 +61,11 @@ impl Progress {
         })
     }
 
-    pub(super) fn progress(&mut self) {
+    pub(crate) fn progress(&mut self) {
         self.tasks_done += 1;
     }
 
-    pub(super) fn refresh(&mut self) -> Result<()> {
+    pub(crate) fn refresh(&mut self) -> Result<()> {
         if self.bar.pb.counter < self.tasks_done.max(0) as usize {
             self.bar.update(1)?;
         } else {
@@ -75,7 +75,7 @@ impl Progress {
         Ok(())
     }
 
-    pub(super) fn cleanup(&mut self, status: ExitStatus) -> Result<()> {
+    pub(crate) fn cleanup(&mut self, status: ExitStatus) -> Result<()> {
         term::show_cursor()?;
         if status.success() {
             if self.tasks_total == 0 {
@@ -90,12 +90,12 @@ impl Progress {
         Ok(())
     }
 
-    pub(super) fn add_task(&mut self) {
+    pub(crate) fn add_task(&mut self) {
         self.tasks_total += 1;
         self.bar.pb.total = self.tasks_total;
     }
 
-    pub(super) fn add_derivations(&mut self, line: &str) {
+    pub(crate) fn add_derivations(&mut self, line: &str) {
         let re = Regex::new(r"\d+").unwrap();
         let count: usize = re
             .find(line)
@@ -107,7 +107,7 @@ impl Progress {
             .replace(7, Column::Text(format!("[bold blue]{}", self.derivations)));
     }
 
-    pub(super) fn add_fetched(&mut self, line: &str) {
+    pub(crate) fn add_fetched(&mut self, line: &str) {
         let re = Regex::new(r"([\d\.]+) MiB").unwrap();
         let amounts: Vec<f32> = re
             .captures_iter(line)

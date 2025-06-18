@@ -1,6 +1,6 @@
-use crate::util::Result;
+use crate::{options::RebuildMode, util::Result};
 
-use super::{rebuild, snow_command::SnowCommand, RebuildMode};
+use super::{rebuild, runners::SnowCommand};
 
 pub(crate) fn fmt() -> Result<()> {
     let command = SnowCommand::new_nix("nix".to_string(), vec!["fmt"], false);

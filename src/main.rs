@@ -43,7 +43,7 @@ fn main() {
             vm_configuration,
             login_after_setup,
             rebuild_host_machine,
-        } => vm_new(vm_configuration, *login_after_setup, *rebuild_host_machine),
+        } => provision(vm_configuration, *login_after_setup, *rebuild_host_machine),
         Commands::Update { input } => update(input),
         Commands::Repl => repl(),
         Commands::Git { subcommand } => match subcommand {

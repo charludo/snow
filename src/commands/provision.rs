@@ -1,11 +1,12 @@
 use crate::{
     agenix_rekey,
-    commands::{snow_config::VmConfigResolved, util::wrap},
+    commands::{
+        runners::SnowCommand,
+        util::{wrap, SnowConfig, VmConfigResolved},
+    },
     git_add, rebuild, RebuildMode, Result, SnowError,
 };
 use std::{thread, time::Duration};
-
-use super::{snow_command::SnowCommand, snow_config::SnowConfig};
 
 trait OrCleanup {
     fn or_cleanup(self) -> Self;
@@ -25,7 +26,7 @@ fn cleanup() -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn vm_new(
+pub(crate) fn provision(
     vm_configuration: &str,
     login_after: bool,
     rebuild_host: bool,

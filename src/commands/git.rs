@@ -1,6 +1,6 @@
 use crate::util::Result;
 
-use super::snow_command::SnowCommand;
+use super::runners::SnowCommand;
 
 pub(super) fn exist_untracked() -> Result<bool> {
     Ok(SnowCommand::new_git(

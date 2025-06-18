@@ -2,7 +2,7 @@ use std::process::{Command, Stdio};
 
 use crate::util::Result;
 
-use super::{snow_command::SnowCommand, util::wrap};
+use super::{runners::SnowCommand, util::wrap};
 
 fn get_interactive_args(
     default_command: String,

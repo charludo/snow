@@ -1,6 +1,6 @@
 use crate::util::Result;
 
-use super::snow_command::SnowCommand;
+use super::runners::SnowCommand;
 
 pub(crate) fn agenix_update_masterkeys() -> Result<()> {
     let command = SnowCommand::new_agenix(
