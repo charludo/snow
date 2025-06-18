@@ -36,6 +36,9 @@ pub(crate) fn shell(packages: &[String]) -> Result<()> {
         get_interactive_args("nix-shell".to_string(), default_args, &mut success_args)?;
 
     let command = SnowCommand::new_nix(command, args.iter().map(|x| x.as_str()).collect(), false);
+    unsafe {
+        std::env::set_var("NIXPKGS_ALLOW_UNFREE", "1");
+    }
     command.run_interactive()?;
     Ok(())
 }
