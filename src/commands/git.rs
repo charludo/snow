@@ -76,3 +76,9 @@ pub(crate) fn git_all(message: &Option<String>) -> Result<()> {
     git_push()?;
     Ok(())
 }
+
+pub(crate) fn git_init() -> Result<()> {
+    SnowCommand::new_git("git".to_string(), vec!["submodule", "init"]).run_silent()?;
+    SnowCommand::new_git("git".to_string(), vec!["submodule", "update"]).run_silent()?;
+    Ok(())
+}

@@ -39,6 +39,9 @@ pub(crate) enum GitSubcommands {
         /// commit.
         message: Option<String>,
     },
+
+    /// Init submodules.
+    Init,
 }
 
 #[derive(Subcommand, Debug)]

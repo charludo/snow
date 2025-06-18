@@ -52,6 +52,7 @@ fn main() {
             GitSubcommands::Pull => git_pull(),
             GitSubcommands::Push => git_push(),
             GitSubcommands::All { message } => git_all(message),
+            GitSubcommands::Init => git_init(),
         },
         Commands::Agenix { subcommand } => match subcommand {
             AgenixSubcommands::UpdateMasterkeys => agenix_update_masterkeys(),
