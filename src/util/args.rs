@@ -45,6 +45,15 @@ pub(crate) enum GitSubcommands {
 }
 
 #[derive(Subcommand, Debug)]
+pub(crate) enum RebuildSubcommands {
+    /// Rebuild all machines with the given tag.
+    Tag {
+        /// The selected tag.
+        tag: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
 pub(crate) enum AgenixSubcommands {
     /// Update all secrets with a new set of masterkeys.
     UpdateMasterkeys,
@@ -69,6 +78,9 @@ pub(crate) enum Commands {
     /// Rebuild the config for a given host, defaulting to the current host.
     Rebuild {
         nixos_configuration: Option<String>,
+
+        #[command(subcommand)]
+        subcommand: Option<RebuildSubcommands>,
 
         /// Rebuild mode.
         #[arg(long, short, value_enum, default_value_t = RebuildMode::Switch, display_order = 1)]

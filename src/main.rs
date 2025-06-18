@@ -25,19 +25,26 @@ fn main() {
     let result = match &args.command {
         Commands::Rebuild {
             nixos_configuration,
+            subcommand,
             mode,
             target_host,
             build_host,
             build_on_target,
             use_remote_sudo,
-        } => rebuild(
-            nixos_configuration,
-            mode,
-            target_host,
-            build_host,
-            *build_on_target,
-            *use_remote_sudo,
-        ),
+        } => match subcommand {
+            Some(RebuildSubcommands::Tag { tag }) => {
+                log::warn!("{:?}", tag);
+                Ok(())
+            }
+            None => rebuild(
+                nixos_configuration,
+                mode,
+                target_host,
+                build_host,
+                *build_on_target,
+                *use_remote_sudo,
+            ),
+        },
         Commands::Home { home_configuration } => home(home_configuration),
         Commands::Provision {
             vm_configuration,
