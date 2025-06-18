@@ -192,14 +192,16 @@ pub(crate) fn vm_new(
     log::info!("Rebooting {vm_configuration}...");
     command.run_silent()?;
 
-    // Auto-accept the new VM key
+    // Auto-accept the new VM key, and use the opportunity to run resize2fs
     let command = SnowCommand::new(
         "ssh".to_string(),
         vec![
             "-o",
             "StrictHostKeyChecking=accept-new",
             &snow_config.target_host.clone().unwrap(),
-            "exit",
+            "sudo",
+            &snow_config.target_host.clone().unwrap(),
+            "resize2fs /dev/vda2",
         ],
         false,
     );
