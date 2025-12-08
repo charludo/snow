@@ -1,4 +1,4 @@
-use crate::{options::RebuildMode, util::Result};
+use crate::{commands::util::wrap, options::RebuildMode, util::Result};
 
 use super::{rebuild, runners::SnowCommand};
 
@@ -34,7 +34,8 @@ pub(crate) fn update(input: &Option<String>) -> Result<()> {
 }
 
 pub(crate) fn check() -> Result<()> {
-    let args = vec!["flake", "check"];
+    let wrapped = wrap("", true);
+    let args = vec!["flake", "check", &wrapped];
     let command = SnowCommand::new_nix("nix".to_string(), args, false);
     command.run_verbose()?;
     Ok(())
