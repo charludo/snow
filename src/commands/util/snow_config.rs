@@ -24,7 +24,7 @@ pub(crate) struct VmConfig {
     pub(crate) ip: Option<String>,
     pub(crate) proxmox_host: Option<String>,
     pub(crate) proxmox_image_store: Option<String>,
-    pub(crate) resize_disk_by: Option<String>,
+    pub(crate) resize_disk_to: Option<String>,
 }
 
 pub(crate) struct VmConfigResolved {
@@ -32,7 +32,7 @@ pub(crate) struct VmConfigResolved {
     pub(crate) ip: String,
     pub(crate) proxmox_host: String,
     pub(crate) proxmox_image_store: String,
-    pub(crate) resize_disk_by: String,
+    pub(crate) resize_disk_to: String,
 }
 
 impl SnowConfig {
@@ -66,9 +66,9 @@ impl TryFrom<VmConfig> for VmConfigResolved {
             proxmox_image_store: value
                 .proxmox_image_store
                 .ok_or_else(|| SnowError::SnowConfig("missing proxmox_image_store".to_string()))?,
-            resize_disk_by: value
-                .resize_disk_by
-                .ok_or_else(|| SnowError::SnowConfig("missing resize_disk_by".to_string()))?,
+            resize_disk_to: value
+                .resize_disk_to
+                .ok_or_else(|| SnowError::SnowConfig("missing resize_disk_to".to_string()))?,
         })
     }
 }

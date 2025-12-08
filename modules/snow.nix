@@ -67,10 +67,10 @@ with lib;
       description = "Location where qcow VM images are stored for the given proxmox host";
     };
 
-    vm.resizeDiskBy = mkOption {
+    vm.resizeDiskTo = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = "Amount of GiB by which to increase the disk size upon VM creation";
+      description = "Amount of GiB to which the disk size will be increased upon VM creation";
     };
   };
 }

@@ -108,7 +108,7 @@ pub(crate) fn provision(
             &vm_config.proxmox_host,
             &format!(
                 "qm disk resize {} virtio0 {}",
-                vm_config.id, vm_config.resize_disk_by
+                vm_config.id, vm_config.resize_disk_to
             ),
         ],
         false,
@@ -116,7 +116,7 @@ pub(crate) fn provision(
     log::info!(
         "Increasing disk size of disk \"vm_datastore:vm-{}-disk-0\" (virtio0) to {}...",
         vm_config.id,
-        vm_config.resize_disk_by
+        vm_config.resize_disk_to
     );
     command.run_silent().or_cleanup()?;
 
