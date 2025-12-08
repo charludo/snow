@@ -33,6 +33,13 @@ pub(crate) fn update(input: &Option<String>) -> Result<()> {
     Ok(())
 }
 
+pub(crate) fn check() -> Result<()> {
+    let args = vec!["flake", "check"];
+    let command = SnowCommand::new_nix("nix".to_string(), args, false);
+    command.run_verbose()?;
+    Ok(())
+}
+
 #[test]
 fn test_fmt() {
     testing_logger::setup();

@@ -154,4 +154,7 @@ pub(crate) enum Commands {
 
     /// Run nix fmt.
     Fmt,
+
+    /// Run nix flake check.
+    Check,
 }

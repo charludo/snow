@@ -68,6 +68,7 @@ fn main() {
             raw,
         } => eval(expression, *json, *raw),
         Commands::Fmt => fmt(),
+        Commands::Check => check(),
     };
 
     if let Err(message) = result {
