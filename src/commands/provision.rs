@@ -201,7 +201,6 @@ pub(crate) fn provision(
             "StrictHostKeyChecking=accept-new",
             &snow_config.target_host.clone().unwrap(),
             "sudo",
-            &snow_config.target_host.clone().unwrap(),
             "resize2fs /dev/vda2",
         ],
         false,
