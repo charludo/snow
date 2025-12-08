@@ -99,7 +99,7 @@ pub(crate) fn rebuild(
             }
 
             if snow_config.use_remote_sudo {
-                args.push("--use-remote-sudo".to_string());
+                args.push("--sudo".to_string());
             }
             (args, false)
         }
