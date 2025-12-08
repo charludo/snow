@@ -22,7 +22,7 @@ pub(crate) fn rebuild(
         let answer = Confirm::new("Files exist which are untracked by git. If this rebuild depends on such a file, it will fail. Do you want to add them before proceeding?").with_default(true).prompt();
         match answer {
             Ok(true) => {
-                git_add()?;
+                git_add(false)?;
             }
             Ok(false) => {}
             Err(_) => std::process::exit(1),

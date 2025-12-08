@@ -43,7 +43,7 @@ pub(crate) fn provision(
 
     // Rekey secrets with a dummy kwy for the new host
     agenix_rekey(false, true)?;
-    git_add()?;
+    git_add(false)?;
 
     // Generate the vm through nix build
     let command = SnowCommand::new_nix(
@@ -156,11 +156,11 @@ pub(crate) fn provision(
         format!("vms/keys/ssh_host_{vm_configuration}_ed25519_key.pub"),
         pub_key,
     )?;
-    git_add()?;
+    git_add(false)?;
 
     // Rekey secrets for the new host, with real keys this time
     agenix_rekey(false, false)?;
-    git_add()?;
+    git_add(false)?;
 
     // Rebuild the host, with correct secrets this time
     unsafe {

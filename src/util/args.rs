@@ -150,6 +150,10 @@ pub(crate) enum Commands {
     Git {
         #[command(subcommand)]
         subcommand: GitSubcommands,
+
+        /// Only perform git actions on submodules.
+        #[arg(long, short, global=true)]
+        submodules_only: bool,
     },
 
     /// Run nix fmt.

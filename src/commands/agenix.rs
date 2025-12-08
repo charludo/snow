@@ -26,7 +26,7 @@ pub(crate) fn agenix_edit(file: &str) -> Result<()> {
 pub(crate) fn agenix_rekey(force: bool, dummy: bool) -> Result<()> {
     if exist_untracked_secrets()? {
         log::info!("Untracked secrets existed; they were staged.");
-        git_add()?;
+        git_add(false)?;
     };
 
     let mut args = vec!["--extra-flake-params", "?submodules=1", "rekey"];

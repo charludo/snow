@@ -46,13 +46,16 @@ fn main() {
         } => provision(vm_configuration, *login_after_setup, *rebuild_host_machine),
         Commands::Update { input } => update(input),
         Commands::Repl => repl(),
-        Commands::Git { subcommand } => match subcommand {
-            GitSubcommands::Add => git_add(),
-            GitSubcommands::Commit { message } => git_commit(message),
-            GitSubcommands::Pull => git_pull(),
-            GitSubcommands::Push => git_push(),
-            GitSubcommands::All { message } => git_all(message),
-            GitSubcommands::Init => git_init(),
+        Commands::Git {
+            subcommand,
+            submodules_only,
+        } => match subcommand {
+            GitSubcommands::Add {} => git_add(*submodules_only),
+            GitSubcommands::Commit { message } => git_commit(message, *submodules_only),
+            GitSubcommands::Pull => git_pull(*submodules_only),
+            GitSubcommands::Push => git_push(*submodules_only),
+            GitSubcommands::All { message } => git_all(message, *submodules_only),
+            GitSubcommands::Init => git_init(*submodules_only),
         },
         Commands::Agenix { subcommand } => match subcommand {
             AgenixSubcommands::UpdateMasterkeys => agenix_update_masterkeys(),
