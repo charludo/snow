@@ -2,13 +2,17 @@ use crate::util::Result;
 
 use super::runners::SnowCommand;
 
-pub(super) fn exist_untracked() -> Result<bool> {
+pub(super) fn exist_untracked_secrets() -> Result<bool> {
     Ok(SnowCommand::new_git(
         "git".to_string(),
         vec!["status", "--porcelain=v1", "--untracked-files=all"],
     )
     .run_with_return()?
-    .contains("??")
+    .contains("??"))
+}
+
+pub(super) fn exist_untracked() -> Result<bool> {
+    Ok(exist_untracked_secrets()?
         || SnowCommand::new_git(
             "git".to_string(),
             vec![

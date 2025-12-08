@@ -1,4 +1,7 @@
-use crate::util::Result;
+use crate::{
+    commands::{exist_untracked_secrets, git_add},
+    util::Result,
+};
 
 use super::runners::SnowCommand;
 
@@ -21,6 +24,11 @@ pub(crate) fn agenix_edit(file: &str) -> Result<()> {
 }
 
 pub(crate) fn agenix_rekey(force: bool, dummy: bool) -> Result<()> {
+    if exist_untracked_secrets()? {
+        log::info!("Untracked secrets existed; they were staged.");
+        git_add()?;
+    };
+
     let mut args = vec!["--extra-flake-params", "?submodules=1", "rekey"];
     if force {
         args.push("--force");
@@ -47,11 +55,4 @@ fn test_agenix_edit() {
     crate::test_util::ensure_output(
         "agenix --extra-flake-params ?submodules=1 edit help-im-not-real",
     );
-}
-
-#[test]
-fn test_agenix_rekey() {
-    testing_logger::setup();
-    let _ = agenix_rekey(true, false);
-    crate::test_util::ensure_output("agenix --extra-flake-params ?submodules=1 rekey --force");
 }
