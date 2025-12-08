@@ -45,12 +45,8 @@ pub(crate) fn git_add() -> Result<()> {
 }
 
 pub(crate) fn git_commit(message: &Option<String>) -> Result<()> {
-    let message_string;
     let extra_args: Vec<&str> = match message {
-        Some(msg) => {
-            message_string = format!("\"{}\"", msg);
-            vec!["-m", &message_string]
-        }
+        Some(msg) => vec!["-m", msg.as_str()],
         None => vec!["--amend", "-C", "HEAD"],
     };
     git_add()?;
