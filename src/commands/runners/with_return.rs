@@ -18,10 +18,11 @@ impl SnowCommand {
         child.wait()?;
 
         let lines_err = BufReader::new(child.stderr.take().unwrap()).lines();
+        let mut last_err: Option<SnowError> = None;
         for line in lines_err {
             let line = line.unwrap();
             if line.contains("error:") {
-                return Err(SnowError::Nix(
+                last_err = Some(SnowError::Nix(
                     line.replace("error:", "")
                         .replace("Definition values:", "")
                         .trim_start()
@@ -29,6 +30,9 @@ impl SnowCommand {
                         .to_string(),
                 ));
             }
+        }
+        if let Some(err) = last_err {
+            return Err(err)
         }
 
         let mut buf = String::new();
