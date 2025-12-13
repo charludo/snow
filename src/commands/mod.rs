@@ -2,6 +2,7 @@ use crate::RebuildMode;
 
 mod agenix;
 mod build;
+mod bump;
 mod eval;
 mod git;
 mod misc;
@@ -14,6 +15,7 @@ mod util;
 
 pub(crate) use agenix::*;
 pub(crate) use build::*;
+pub(crate) use bump::*;
 pub(crate) use eval::*;
 pub(crate) use git::*;
 pub(crate) use misc::*;

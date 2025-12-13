@@ -77,6 +77,9 @@ fn main() {
         } => eval(expression, *json, *raw),
         Commands::Fmt => fmt(),
         Commands::Check => check(),
+        Commands::Bump { subcommand } => match subcommand {
+            BumpSubcommands::Python { version } => bump_python(version),
+        },
     };
 
     if let Err(message) = result {

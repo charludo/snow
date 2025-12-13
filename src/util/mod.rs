@@ -2,7 +2,7 @@ mod args;
 mod error_handling;
 mod logging;
 
-pub(super) use args::{AgenixSubcommands, Args, Commands, GitSubcommands};
+pub(super) use args::{AgenixSubcommands, Args, BumpSubcommands, Commands, GitSubcommands};
 pub(super) use error_handling::{Result, SnowError};
 pub(super) use logging::setup_logger;
 

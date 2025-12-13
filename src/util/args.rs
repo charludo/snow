@@ -65,6 +65,12 @@ pub(crate) enum AgenixSubcommands {
 }
 
 #[derive(Subcommand, Debug)]
+pub(crate) enum BumpSubcommands {
+    /// Bump all Python packages to the specified version.
+    Python { version: String },
+}
+
+#[derive(Subcommand, Debug)]
 pub(crate) enum Commands {
     /// Rebuild the config for a given host, defaulting to the current host.
     Rebuild {
@@ -179,4 +185,10 @@ pub(crate) enum Commands {
 
     /// Run nix flake check.
     Check,
+
+    /// Bump package versions.
+    Bump {
+        #[command(subcommand)]
+        subcommand: BumpSubcommands,
+    },
 }
