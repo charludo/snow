@@ -176,6 +176,7 @@ pub(crate) fn provision(
         &None,
         false,
         false,
+        false,
     )?;
     unsafe {
         std::env::set_var("NIX_SSHOPTS", "");
@@ -209,7 +210,15 @@ pub(crate) fn provision(
 
     // OPTIONALLY: rebuild the local host to make its SSH handle available
     if rebuild_host {
-        rebuild(&None, &RebuildMode::Switch, &None, &None, false, false)?;
+        rebuild(
+            &None,
+            &RebuildMode::Switch,
+            &None,
+            &None,
+            false,
+            false,
+            false,
+        )?;
     }
 
     // OPTIONALLY: log the user into the new VM via SSH

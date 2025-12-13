@@ -16,6 +16,6 @@ pub(crate) fn build(output: &Option<String>) -> Result<()> {
         vec!["build", &wrap(&output, true)],
         false,
     );
-    command.run_progress(output)?;
+    command.run_verbose()?;
     Ok(())
 }

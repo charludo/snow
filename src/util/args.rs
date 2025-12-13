@@ -87,8 +87,17 @@ pub(crate) enum Commands {
         build_on_target: bool,
 
         /// Whether deployment requires sudo authentication on the target side.
-        #[arg(long, short = 's', display_order = 5)]
+        #[arg(
+            long,
+            short = 's',
+            default_value_if("ask_sudo_password", "true", "true"),
+            display_order = 5
+        )]
         use_remote_sudo: bool,
+
+        /// Whether to ask for the remote sudo password. Implies --use-remote-sudo.
+        #[arg(long, short = 'a', display_order = 6)]
+        ask_sudo_password: bool,
     },
 
     /// Rebuild only the HomeManager config for the current user and host.

@@ -18,6 +18,15 @@ with lib;
       '';
     };
 
+    askSudoPassword = mkOption {
+      type = types.nullOr types.bool;
+      default = null;
+      description = ''
+        Whether to ask for the remote sudo password.
+        If `useRemoteSudo` is set, this defaults to `true`
+      '';
+    };
+
     buildOnTarget = mkOption {
       type = types.bool;
       default = false;
