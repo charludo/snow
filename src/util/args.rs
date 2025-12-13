@@ -108,11 +108,11 @@ pub(crate) enum Commands {
         rebuild_host_machine: bool,
     },
 
-    /// Build the specified output. Supports git submodules.
-    Build { output: String },
+    /// Build the default or specified output. Supports git submodules.
+    Build { output: Option<String> },
 
-    /// Run the specified output, building if necessary. Supports git submodules.
-    Run { output: String },
+    /// Run the default or specified output, building it first if necessary. Supports git submodules.
+    Run { output: Option<String> },
 
     /// Enter the default shell specified in the current flake.nix, or the shell specified.
     Develop { shell_name: Option<String> },
