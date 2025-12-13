@@ -33,38 +33,41 @@ pub(crate) fn rebuild(
     // In build mode, no sudo is required and nothing should be pushed to the target host
     let build_only = matches!(*mode, RebuildMode::Build);
 
-    let hostname = gethostname();
-    let (args, sudo) = match nixos_configuration {
-        Some(nixos_configuration) => {
-            let default_snow_config = SnowConfig::get_snow_config(nixos_configuration)?;
-            let snow_config = SnowConfig {
-                tags: default_snow_config.tags,
-                use_remote_sudo: use_remote_sudo || default_snow_config.use_remote_sudo,
-                ask_sudo_password: Some(
-                    ask_sudo_password
-                        || default_snow_config
-                            .ask_sudo_password
-                            .unwrap_or(use_remote_sudo || default_snow_config.use_remote_sudo),
-                ),
-                build_on_target: build_on_target || default_snow_config.build_on_target,
-                build_host: build_host
-                    .clone()
-                    .or(default_snow_config.build_host.to_owned()),
-                target_host: target_host
-                    .clone()
-                    .or(default_snow_config.target_host.to_owned()),
-                vm: None,
-            };
+    let hostname = gethostname().into_string().unwrap_or_default();
+    let nixos_configuration = match nixos_configuration {
+        Some(nixos_configuration) => nixos_configuration,
+        None => &hostname,
+    };
+    let (args, sudo) = {
+        let default_snow_config = SnowConfig::get_snow_config(nixos_configuration)?;
+        let snow_config = SnowConfig {
+            tags: default_snow_config.tags,
+            use_remote_sudo: use_remote_sudo || default_snow_config.use_remote_sudo,
+            ask_sudo_password: Some(
+                ask_sudo_password
+                    || default_snow_config
+                        .ask_sudo_password
+                        .unwrap_or(use_remote_sudo || default_snow_config.use_remote_sudo),
+            ),
+            build_on_target: build_on_target || default_snow_config.build_on_target,
+            build_host: build_host
+                .clone()
+                .or(default_snow_config.build_host.to_owned()),
+            target_host: target_host
+                .clone()
+                .or(default_snow_config.target_host.to_owned()),
+            vm: None,
+        };
 
-            if (snow_config.target_host.is_none() && **nixos_configuration != *hostname)
-                || snow_config.target_host != default_snow_config.target_host
-            {
-                let answer = Confirm::new(&format!(
+        if (snow_config.target_host.is_none() && *nixos_configuration != *hostname)
+            || snow_config.target_host != default_snow_config.target_host
+        {
+            let answer = Confirm::new(&format!(
                     "You are about to deploy the nixosConfiguration \"{}\" to the target host \"{}\", overwriting the default target location \"{}\" for this host. Are you absolutely certain that this is what you meant to do?",
                     nixos_configuration,
                     snow_config
                         .target_host.clone()
-                        .unwrap_or(hostname.to_str().unwrap_or_default().to_string()),
+                        .unwrap_or(hostname.to_string()),
                     default_snow_config
                         .target_host
                         .unwrap_or("[not specified]".to_string())
@@ -74,60 +77,53 @@ pub(crate) fn rebuild(
                             "!!! This will erase the configuration currently deployed to {} !!!",
                             &snow_config
                                 .target_host.clone()
-                                .unwrap_or(format!("your local machine, \"{}\"", hostname.to_str().unwrap_or_default()))
+                                .unwrap_or(format!("your local machine, \"{}\"", hostname))
                         )
                     ).prompt();
 
-                if !answer.is_ok_and(|x| x) {
-                    std::process::exit(1);
-                }
+            if !answer.is_ok_and(|x| x) {
+                std::process::exit(1);
             }
-
-            let mut args = vec![
-                mode.to_string(),
-                "--flake".to_string(),
-                wrap(nixos_configuration, true),
-            ];
-
-            if let Some(ref target_host) = snow_config.target_host {
-                if !build_only {
-                    args.push("--target-host".to_string());
-                    args.push(target_host.to_string());
-                } else {
-                    log::debug!("in build-only mode, the --target-host arg is skipped");
-                }
-            }
-
-            if let Some(build_host) = snow_config.build_host {
-                args.push("--build-host".to_string());
-                args.push(build_host);
-            } else if snow_config.build_on_target {
-                if let Some(target_host) = snow_config.target_host.clone() {
-                    args.push("--build-host".to_string());
-                    args.push(target_host);
-                } else {
-                    return Err(SnowError::SnowConfig(
-                        "\"build on target\" is specified, but no target host is given".to_string(),
-                    ));
-                }
-            }
-
-            if snow_config.use_remote_sudo {
-                args.push("--sudo".to_string());
-            }
-            if Some(true) == snow_config.ask_sudo_password {
-                args.push("--ask-sudo-password".to_string());
-            }
-            (args, false)
         }
-        None => (
-            vec![
-                mode.to_string(),
-                "--flake".to_string(),
-                wrap(hostname.to_str().unwrap_or_default(), true),
-            ],
-            true,
-        ),
+
+        let mut args = vec![
+            mode.to_string(),
+            "--flake".to_string(),
+            wrap(nixos_configuration, true),
+        ];
+
+        if let Some(ref target_host) = snow_config.target_host {
+            if !build_only {
+                args.push("--target-host".to_string());
+                args.push(target_host.to_string());
+            } else {
+                log::debug!("in build-only mode, the --target-host arg is skipped");
+            }
+        }
+
+        if let Some(build_host) = snow_config.build_host {
+            args.push("--build-host".to_string());
+            args.push(build_host);
+        } else if snow_config.build_on_target {
+            if let Some(target_host) = snow_config.target_host.clone() {
+                args.push("--build-host".to_string());
+                args.push(target_host);
+            } else {
+                return Err(SnowError::SnowConfig(
+                    "\"build on target\" is specified, but no target host is given".to_string(),
+                ));
+            }
+        }
+
+        if snow_config.use_remote_sudo {
+            args.push("--sudo".to_string());
+        }
+        if Some(true) == snow_config.ask_sudo_password {
+            args.push("--ask-sudo-password".to_string());
+        }
+
+        let requires_sudo = *nixos_configuration == hostname && !build_only;
+        (args, requires_sudo)
     };
 
     let mut command = SnowCommand::new_nix(
@@ -135,20 +131,13 @@ pub(crate) fn rebuild(
         args.iter().map(|x| x.as_str()).collect(),
         sudo,
     );
-    if build_only {
-        command.requires_sudo = false;
-    }
 
     match LOG_LEVEL.get() {
         Some(LevelFilter::Debug) => {
             command.append_arg("--show-trace");
             command.run_verbose()?
         }
-        _ => command.run_progress(
-            nixos_configuration
-                .clone()
-                .unwrap_or(hostname.to_str().unwrap_or_default().to_string()),
-        )?,
+        _ => command.run_progress(nixos_configuration.to_string())?,
     }
     Ok(())
 }
