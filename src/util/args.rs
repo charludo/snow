@@ -123,6 +123,9 @@ pub(crate) enum Commands {
         rebuild_host_machine: bool,
     },
 
+    /// Print just the missing hash of a build process.
+    Hash { output: Option<String> },
+
     /// Build the default or specified output. Supports git submodules.
     Build { output: Option<String> },
 
