@@ -44,8 +44,11 @@ fn main() {
             login_after_setup,
             rebuild_host_machine,
         } => provision(vm_configuration, *login_after_setup, *rebuild_host_machine),
+        Commands::Build { output } => build(output),
+        Commands::Run { output } => run(output),
         Commands::Update { input } => update(input),
         Commands::Repl => repl(),
+        Commands::Why { derivation } => referrers_closure(derivation),
         Commands::Git {
             subcommand,
             submodules_only,

@@ -108,6 +108,12 @@ pub(crate) enum Commands {
         rebuild_host_machine: bool,
     },
 
+    /// Build the specified output. Supports git submodules.
+    Build { output: String },
+
+    /// Run the specified output, building if necessary. Supports git submodules.
+    Run { output: String },
+
     /// Enter the default shell specified in the current flake.nix, or the shell specified.
     Develop { shell_name: Option<String> },
 
@@ -129,6 +135,9 @@ pub(crate) enum Commands {
 
     /// Enter the nix repl, preloading the current flake including submodules.
     Repl,
+
+    /// Print the referrer closure for the given derivation.
+    Why { derivation: String },
 
     /// Secrets management.
     Agenix {
@@ -152,7 +161,7 @@ pub(crate) enum Commands {
         subcommand: GitSubcommands,
 
         /// Only perform git actions on submodules.
-        #[arg(long, short, global=true)]
+        #[arg(long, short, global = true)]
         submodules_only: bool,
     },
 
