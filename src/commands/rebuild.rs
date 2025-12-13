@@ -29,6 +29,9 @@ pub(crate) fn rebuild(
         }
     }
 
+    // In build mode, no sudo is required and nothing should be pushed to the target host
+    let build_only = matches!(*mode, RebuildMode::Build);
+
     let hostname = gethostname();
     let (args, sudo) = match nixos_configuration {
         Some(nixos_configuration) => {
@@ -80,8 +83,12 @@ pub(crate) fn rebuild(
             ];
 
             if let Some(ref target_host) = snow_config.target_host {
-                args.push("--target-host".to_string());
-                args.push(target_host.to_string());
+                if !build_only {
+                    args.push("--target-host".to_string());
+                    args.push(target_host.to_string());
+                } else {
+                    log::debug!("in build-only mode, the --target-host arg is skipped");
+                }
             }
 
             if let Some(build_host) = snow_config.build_host {
@@ -118,6 +125,9 @@ pub(crate) fn rebuild(
         args.iter().map(|x| x.as_str()).collect(),
         sudo,
     );
+    if build_only {
+        command.requires_sudo = false;
+    }
 
     match LOG_LEVEL.get() {
         Some(LevelFilter::Debug) => {
