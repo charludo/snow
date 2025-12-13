@@ -17,6 +17,7 @@ pub(crate) fn rebuild(
     build_host: &Option<String>,
     build_on_target: bool,
     use_remote_sudo: bool,
+    ask_sudo_password: bool,
 ) -> Result<()> {
     if exist_untracked()? {
         let answer = Confirm::new("Files exist which are untracked by git. If this rebuild depends on such a file, it will fail. Do you want to add them before proceeding?").with_default(true).prompt();
@@ -39,6 +40,12 @@ pub(crate) fn rebuild(
             let snow_config = SnowConfig {
                 tags: default_snow_config.tags,
                 use_remote_sudo: use_remote_sudo || default_snow_config.use_remote_sudo,
+                ask_sudo_password: Some(
+                    ask_sudo_password
+                        || default_snow_config
+                            .ask_sudo_password
+                            .unwrap_or(use_remote_sudo || default_snow_config.use_remote_sudo),
+                ),
                 build_on_target: build_on_target || default_snow_config.build_on_target,
                 build_host: build_host
                     .clone()
@@ -107,6 +114,9 @@ pub(crate) fn rebuild(
 
             if snow_config.use_remote_sudo {
                 args.push("--sudo".to_string());
+            }
+            if Some(true) == snow_config.ask_sudo_password {
+                args.push("--ask-sudo-password".to_string());
             }
             (args, false)
         }
