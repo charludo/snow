@@ -26,14 +26,26 @@ fn get_interactive_args(
 }
 
 pub(crate) fn shell(packages: &[String]) -> Result<()> {
-    let mut default_args = packages.to_vec();
-    default_args.insert(0, "-p".to_string());
+    // We allow mixed shells. If no "#" is found in the package arg,
+    // assume a nixpkgs package is meant.
+    let mut default_args = packages
+        .iter()
+        .map(|p| {
+            if p.contains("#") {
+                p.to_owned()
+            } else {
+                format!("nixpkgs#{p}")
+            }
+        })
+        .collect::<Vec<String>>()
+        .to_vec();
+    default_args.insert(0, "--impure".to_string()); // to pass UNFREE arg to nix shell
+    default_args.insert(0, "--".to_string());
+    default_args.insert(0, "shell".to_string());
     let mut success_args = default_args.clone();
-    success_args.insert(0, "--".to_string());
-    success_args.insert(0, "nix-shell".to_string());
+    success_args.insert(0, "nix".to_string());
 
-    let (command, args) =
-        get_interactive_args("nix-shell".to_string(), default_args, &mut success_args)?;
+    let (command, args) = get_interactive_args("nix".to_string(), default_args, &mut success_args)?;
 
     let command = SnowCommand::new_nix(command, args.iter().map(|x| x.as_str()).collect(), false);
     unsafe {
