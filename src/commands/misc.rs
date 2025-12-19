@@ -16,7 +16,16 @@ pub(crate) fn clean(rebuild_after: bool) -> Result<()> {
     command.run_verbose()?;
 
     if rebuild_after {
-        return rebuild(&None, &RebuildMode::Boot, &None, &None, false, false, false);
+        return rebuild(
+            &None,
+            &RebuildMode::Boot,
+            &None,
+            &None,
+            false,
+            false,
+            false,
+            false,
+        );
     }
 
     Ok(())

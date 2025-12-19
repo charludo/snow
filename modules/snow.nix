@@ -35,6 +35,16 @@ with lib;
       '';
     };
 
+    useSubstitutes = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Whether the target host should directly pull from substituters.
+        Only useful if the connection between cache and target is faster than
+        between target and build host.
+      '';
+    };
+
     targetHost = mkOption {
       type = types.nullOr types.str;
       default = null;

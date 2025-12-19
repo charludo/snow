@@ -104,6 +104,12 @@ pub(crate) enum Commands {
         /// Whether to ask for the remote sudo password. Implies --use-remote-sudo.
         #[arg(long, short = 'a', display_order = 6)]
         ask_sudo_password: bool,
+
+        /// Whether the build host / target host should try to use substituters directly.
+        /// This is useful when the target host connection to the [c]ache is faster than
+        /// the connection between builder and target.
+        #[arg(long, short = 'c', display_order = 7)]
+        use_substitutes: bool,
     },
 
     /// Rebuild only the HomeManager config for the current user and host.

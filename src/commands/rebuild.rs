@@ -10,6 +10,7 @@ use super::runners::SnowCommand;
 use super::util::SnowConfig;
 use super::{exist_untracked, git_add, RebuildMode};
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn rebuild(
     nixos_configuration: &Option<String>,
     mode: &RebuildMode,
@@ -18,6 +19,7 @@ pub(crate) fn rebuild(
     build_on_target: bool,
     use_remote_sudo: bool,
     ask_sudo_password: bool,
+    use_substitutes: bool,
 ) -> Result<()> {
     if exist_untracked()? {
         let answer = Confirm::new("Files exist which are untracked by git. If this rebuild depends on such a file, it will fail. Do you want to add them before proceeding?").with_default(true).prompt();
@@ -50,6 +52,7 @@ pub(crate) fn rebuild(
                         .unwrap_or(use_remote_sudo || default_snow_config.use_remote_sudo),
             ),
             build_on_target: build_on_target || default_snow_config.build_on_target,
+            use_substitutes: use_substitutes || default_snow_config.use_substitutes,
             build_host: build_host
                 .clone()
                 .or(default_snow_config.build_host.to_owned()),
@@ -120,6 +123,9 @@ pub(crate) fn rebuild(
         }
         if Some(true) == snow_config.ask_sudo_password {
             args.push("--ask-sudo-password".to_string());
+        }
+        if snow_config.use_substitutes {
+            args.push("--use-substitutes".to_string());
         }
 
         let requires_sudo = *nixos_configuration == hostname && !build_only;

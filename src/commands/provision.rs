@@ -177,6 +177,7 @@ pub(crate) fn provision(
         false,
         false,
         false,
+        false,
     )?;
     unsafe {
         std::env::set_var("NIX_SSHOPTS", "");
@@ -215,6 +216,7 @@ pub(crate) fn provision(
             &RebuildMode::Switch,
             &None,
             &None,
+            false,
             false,
             false,
             false,

@@ -31,6 +31,7 @@ fn main() {
             build_on_target,
             use_remote_sudo,
             ask_sudo_password,
+            use_substitutes,
         } => rebuild(
             nixos_configuration,
             mode,
@@ -39,6 +40,7 @@ fn main() {
             *build_on_target,
             *use_remote_sudo,
             *ask_sudo_password,
+            *use_substitutes,
         ),
         Commands::Home { home_configuration } => home(home_configuration),
         Commands::Provision {
