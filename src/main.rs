@@ -88,6 +88,20 @@ fn main() {
         Commands::Debug {
             nixos_configuration,
         } => debug_build(nixos_configuration),
+        Commands::Assimilate {
+            prepare,
+            target,
+            nixos_configuration,
+        } => {
+            if *prepare {
+                assimilate_prepare()
+            } else {
+                assimilate_run(
+                    target.as_deref().unwrap(),
+                    nixos_configuration.as_deref().unwrap(),
+                )
+            }
+        }
     };
 
     if let Err(message) = result {

@@ -207,4 +207,25 @@ pub(crate) enum Commands {
 
     /// Find the reason for a warning when building the given nixosConfiguration.
     Debug { nixos_configuration: Option<String> },
+
+    /// Bootstrap a fresh NixOS installation: copy keys, generate hardware config, deploy, reboot.
+    ///
+    /// Run on the target machine first with --prepare to enable SSH and flake support, then run
+    /// without --prepare from the managing host to complete the assimilation.
+    /// Without snow on the target:
+    ///   nix --extra-experimental-features 'nix-command flakes' run github:charludo/snow -- assimilate --prepare
+    Assimilate {
+        /// Enable SSH, trusted-users, and flakes on this machine via a temporary nixos-rebuild.
+        /// Run this on the fresh target before invoking assimilate from the managing host.
+        #[arg(long, conflicts_with_all = ["target", "nixos_configuration"])]
+        prepare: bool,
+
+        /// Target in user@host format.
+        #[arg(required_unless_present = "prepare")]
+        target: Option<String>,
+
+        /// nixosConfiguration to deploy.
+        #[arg(required_unless_present = "prepare")]
+        nixos_configuration: Option<String>,
+    },
 }

@@ -1,6 +1,7 @@
 use crate::RebuildMode;
 
 mod agenix;
+mod assimilate;
 mod build;
 mod bump;
 mod debug;
@@ -15,6 +16,7 @@ mod store;
 mod util;
 
 pub(crate) use agenix::*;
+pub(crate) use assimilate::*;
 pub(crate) use build::*;
 pub(crate) use bump::*;
 pub(crate) use debug::*;
