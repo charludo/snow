@@ -131,6 +131,14 @@ pub(crate) fn provision(
     );
     command.run_silent().or_cleanup()?;
 
+    // Remove any stale known_hosts entries so re-provisioning doesn't fail on key mismatch
+    let _ =
+        SnowCommand::new("ssh-keygen".to_string(), vec!["-R", &vm_config.ip], false).run_silent();
+    if let Some(ref target_host) = snow_config.target_host {
+        let _ =
+            SnowCommand::new("ssh-keygen".to_string(), vec!["-R", target_host], false).run_silent();
+    }
+
     // Obtain the public key
     let command = SnowCommand::new("ssh-keyscan".to_string(), vec![&vm_config.ip], false);
     log::info!("Waiting for {vm_configuration} to come online to obtain its public ssh key...");
