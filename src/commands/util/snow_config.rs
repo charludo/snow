@@ -1,5 +1,5 @@
-use crate::util::Result;
 use crate::SnowError;
+use crate::util::Result;
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 

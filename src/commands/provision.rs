@@ -1,10 +1,10 @@
 use crate::{
-    agenix_rekey,
+    RebuildMode, Result, SnowError, agenix_rekey,
     commands::{
         runners::SnowCommand,
-        util::{wrap, SnowConfig, VmConfigResolved},
+        util::{SnowConfig, VmConfigResolved, wrap},
     },
-    git_add, rebuild, RebuildMode, Result, SnowError,
+    git_add, rebuild,
 };
 use std::{thread, time::Duration};
 
@@ -37,7 +37,7 @@ pub(crate) fn provision(
         None => {
             return Err(SnowError::SnowConfig(format!(
                 "VM settings are not configured for host \"{vm_configuration}\""
-            )))
+            )));
         }
     };
 

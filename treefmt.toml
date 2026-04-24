@@ -1,0 +1,19 @@
+[formatter.nixfmt]
+command = "nixfmt"
+includes = ["*.nix"]
+
+[formatter.deadnix]
+command = "deadnix"
+options = ["-f"]
+includes = ["*.nix"]
+
+[formatter.rust]
+command = "rustfmt"
+options = ["--edition", "2024"]
+includes = ["*.rs"]
+
+[formatter.taplo]
+command = "taplo"
+excludes = []
+includes = ["*.toml"]
+options = ["format"]

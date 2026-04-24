@@ -1,6 +1,6 @@
 use log::LevelFilter;
 
-use crate::{util::Result, LOG_LEVEL};
+use crate::{LOG_LEVEL, util::Result};
 use std::process::{Command, Stdio};
 
 use super::SnowCommand;

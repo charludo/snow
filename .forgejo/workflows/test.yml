@@ -1,0 +1,16 @@
+name: Run tests
+run-name: ${{ forgejo.actor }} is running tests
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+jobs:
+  tests:
+    runs-on: nix
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: run tests
+        run: nix develop -c cargo test

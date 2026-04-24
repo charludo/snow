@@ -1,7 +1,7 @@
 use log::LevelFilter;
 
 use super::SnowCommand;
-use crate::{util::Result, SnowError, LOG_LEVEL};
+use crate::{LOG_LEVEL, SnowError, util::Result};
 use std::io::BufRead;
 use std::io::BufReader;
 use std::process::{Command, Stdio};

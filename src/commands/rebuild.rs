@@ -1,6 +1,6 @@
 use crate::commands::util::wrap;
 use crate::util::Result;
-use crate::{SnowError, LOG_LEVEL};
+use crate::{LOG_LEVEL, SnowError};
 use gethostname::gethostname;
 use inquire::Confirm;
 use log::LevelFilter;
@@ -8,7 +8,7 @@ use users::get_current_username;
 
 use super::runners::SnowCommand;
 use super::util::SnowConfig;
-use super::{exist_untracked, git_add, RebuildMode};
+use super::{RebuildMode, exist_untracked, git_add};
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn rebuild(

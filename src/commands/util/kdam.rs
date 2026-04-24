@@ -1,7 +1,7 @@
 use crate::Result;
-use kdam::{term, tqdm, BarExt, Column, RichProgress, Spinner};
+use kdam::{BarExt, Column, RichProgress, Spinner, term, tqdm};
 use regex::Regex;
-use std::io::{stderr, IsTerminal};
+use std::io::{IsTerminal, stderr};
 use std::process::ExitStatus;
 
 #[derive(Debug)]
