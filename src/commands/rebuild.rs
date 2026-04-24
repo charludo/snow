@@ -43,6 +43,55 @@ pub(crate) fn rebuild(
     };
     let (args, sudo, effective_port) = {
         let default_snow_config = SnowConfig::get_snow_config(nixos_configuration)?;
+
+        // Resolve which build host to pass to nixos-rebuild.
+        //
+        // Priority (highest first):
+        //   1. --build-host CLI flag
+        //   2. agreement between running host's buildHost and target's buildMeOn
+        //   3. running host's buildHost alone
+        //   4. target host's buildMeOn alone
+        //
+        // The running host's buildMeOn and the target host's buildHost have no effect.
+        let build_host_resolved: Option<String> = if let Some(cli_bh) = build_host {
+            if cli_bh.is_empty() {
+                None
+            } else {
+                Some(cli_bh.clone())
+            }
+        } else {
+            let rebuilding_self = nixos_configuration.as_str() == hostname.as_str();
+
+            let running_build_host: Option<String> = if rebuilding_self {
+                default_snow_config.build_host.clone()
+            } else {
+                SnowConfig::get_snow_config(&hostname)
+                    .ok()
+                    .and_then(|c| c.build_host)
+            };
+
+            // buildMeOn on the running host is never considered.
+            let target_build_me_on: Option<String> = if rebuilding_self {
+                None
+            } else {
+                default_snow_config.build_me_on.clone()
+            };
+
+            match (&running_build_host, &target_build_me_on) {
+                (Some(a), Some(b)) if a == b => Some(a.clone()),
+                (Some(a), Some(b)) => {
+                    return Err(SnowError::SnowConfig(format!(
+                        "build host conflict: this machine (\"{hostname}\") is configured to \
+                         build on \"{a}\", but target \"{nixos_configuration}\" wants to be \
+                         built on \"{b}\"; use --build-host/-b to select one"
+                    )));
+                }
+                (Some(a), None) => Some(a.clone()),
+                (None, Some(b)) => Some(b.clone()),
+                (None, None) => None,
+            }
+        };
+
         let snow_config = SnowConfig {
             tags: default_snow_config.tags,
             use_remote_sudo: use_remote_sudo || default_snow_config.use_remote_sudo,
@@ -54,9 +103,8 @@ pub(crate) fn rebuild(
             ),
             build_on_target: build_on_target || default_snow_config.build_on_target,
             use_substitutes: use_substitutes || default_snow_config.use_substitutes,
-            build_host: build_host
-                .clone()
-                .or(default_snow_config.build_host.to_owned()),
+            build_host: build_host_resolved,
+            build_me_on: None,
             target_host: target_host
                 .clone()
                 .or(default_snow_config.target_host.to_owned()),

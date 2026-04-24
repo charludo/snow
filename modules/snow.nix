@@ -67,7 +67,17 @@ with lib;
       type = types.nullOr types.str;
       default = null;
       description = ''
-        The SSH host on which the building should take place
+        The SSH host on which this machine wants to perform builds
+      '';
+    };
+
+    buildMeOn = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = ''
+        The SSH host on which this machine wants to be rebuilt when some other
+        host is rebuilding it via snow. `--build-host` passed to the CLI on the
+        other host takes precedence
       '';
     };
 
