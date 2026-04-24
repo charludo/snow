@@ -204,4 +204,7 @@ pub(crate) enum Commands {
         #[command(subcommand)]
         subcommand: BumpSubcommands,
     },
+
+    /// Find the reason for a warning when building the given nixosConfiguration.
+    Debug { nixos_configuration: Option<String> },
 }

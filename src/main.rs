@@ -85,6 +85,9 @@ fn main() {
         Commands::Bump { subcommand } => match subcommand {
             BumpSubcommands::Python { version } => bump_python(version),
         },
+        Commands::Debug {
+            nixos_configuration,
+        } => debug_build(nixos_configuration),
     };
 
     if let Err(message) = result {
