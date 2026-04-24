@@ -15,6 +15,7 @@ pub(crate) struct SnowConfig {
     pub(crate) use_substitutes: bool,
     pub(crate) target_host: Option<String>,
     pub(crate) build_host: Option<String>,
+    pub(crate) target_port: Option<u16>,
 
     pub(crate) vm: Option<VmConfig>,
 }

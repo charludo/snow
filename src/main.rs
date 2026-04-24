@@ -32,6 +32,7 @@ fn main() {
             use_remote_sudo,
             ask_sudo_password,
             use_substitutes,
+            target_port,
         } => rebuild(
             nixos_configuration,
             mode,
@@ -41,6 +42,7 @@ fn main() {
             *use_remote_sudo,
             *ask_sudo_password,
             *use_substitutes,
+            target_port,
         ),
         Commands::Home { home_configuration } => home(home_configuration),
         Commands::Provision {
@@ -58,7 +60,7 @@ fn main() {
             subcommand,
             submodules_only,
         } => match subcommand {
-            GitSubcommands::Add {} => git_add(*submodules_only),
+            GitSubcommands::Add => git_add(*submodules_only),
             GitSubcommands::Commit { message } => git_commit(message, *submodules_only),
             GitSubcommands::Pull => git_pull(*submodules_only),
             GitSubcommands::Push => git_push(*submodules_only),

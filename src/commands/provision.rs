@@ -178,6 +178,7 @@ pub(crate) fn provision(
         false,
         false,
         false,
+        &None,
     )?;
     unsafe {
         std::env::set_var("NIX_SSHOPTS", "");
@@ -220,6 +221,7 @@ pub(crate) fn provision(
             false,
             false,
             false,
+            &None,
         )?;
     }
 

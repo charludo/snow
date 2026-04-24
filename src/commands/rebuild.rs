@@ -20,6 +20,7 @@ pub(crate) fn rebuild(
     use_remote_sudo: bool,
     ask_sudo_password: bool,
     use_substitutes: bool,
+    target_port: &Option<u16>,
 ) -> Result<()> {
     if exist_untracked()? {
         let answer = Confirm::new("Files exist which are untracked by git. If this rebuild depends on such a file, it will fail. Do you want to add them before proceeding?").with_default(true).prompt();
@@ -40,7 +41,7 @@ pub(crate) fn rebuild(
         Some(nixos_configuration) => nixos_configuration,
         None => &hostname,
     };
-    let (args, sudo) = {
+    let (args, sudo, effective_port) = {
         let default_snow_config = SnowConfig::get_snow_config(nixos_configuration)?;
         let snow_config = SnowConfig {
             tags: default_snow_config.tags,
@@ -59,6 +60,7 @@ pub(crate) fn rebuild(
             target_host: target_host
                 .clone()
                 .or(default_snow_config.target_host.to_owned()),
+            target_port: target_port.or(default_snow_config.target_port),
             vm: None,
         };
 
@@ -129,8 +131,17 @@ pub(crate) fn rebuild(
         }
 
         let requires_sudo = *nixos_configuration == hostname && !build_only;
-        (args, requires_sudo)
+        (args, requires_sudo, snow_config.target_port)
     };
+
+    if let Some(port) = effective_port {
+        let mut opts = std::env::var("NIX_SSHOPTS").unwrap_or_default();
+        if !opts.is_empty() {
+            opts += " ";
+        }
+        opts += &format!("-p {port}");
+        unsafe { std::env::set_var("NIX_SSHOPTS", opts) };
+    }
 
     let mut command = SnowCommand::new_nix(
         "nixos-rebuild".to_string(),

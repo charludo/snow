@@ -110,6 +110,10 @@ pub(crate) enum Commands {
         /// the connection between builder and target.
         #[arg(long, short = 'c', display_order = 7)]
         use_substitutes: bool,
+
+        /// SSH [p]ort to use when connecting to the target or build host.
+        #[arg(long, short = 'p', display_order = 8)]
+        target_port: Option<u16>,
     },
 
     /// Rebuild only the HomeManager config for the current user and host.

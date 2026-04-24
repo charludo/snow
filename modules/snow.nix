@@ -54,6 +54,15 @@ with lib;
       '';
     };
 
+    targetPort = mkOption {
+      type = types.nullOr types.port;
+      default = null;
+      description = ''
+        The SSH port to use when connecting to the target host.
+        Can be overridden with `--target-port` / `-p` on the command line
+      '';
+    };
+
     buildHost = mkOption {
       type = types.nullOr types.str;
       default = null;

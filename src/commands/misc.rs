@@ -25,6 +25,7 @@ pub(crate) fn clean(rebuild_after: bool) -> Result<()> {
             false,
             false,
             false,
+            &None,
         );
     }
 
