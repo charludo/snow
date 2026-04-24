@@ -106,7 +106,6 @@ pub(crate) fn assimilate_run(target: &str, nixos_configuration: &str) -> Result<
         &RebuildMode::Boot,
         &Some(target.to_string()),
         &None,
-        false,
         true,
         true,
         false,

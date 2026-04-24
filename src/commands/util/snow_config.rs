@@ -11,7 +11,6 @@ pub(crate) struct SnowConfig {
     pub(crate) tags: Vec<String>,
     pub(crate) use_remote_sudo: bool,
     pub(crate) ask_sudo_password: Option<bool>,
-    pub(crate) build_on_target: bool,
     pub(crate) use_substitutes: bool,
     pub(crate) target_host: Option<String>,
     pub(crate) build_host: Option<String>,

@@ -27,14 +27,6 @@ with lib;
       '';
     };
 
-    buildOnTarget = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Whether to build directly on the target host
-      '';
-    };
-
     useSubstitutes = mkOption {
       type = types.bool;
       default = false;

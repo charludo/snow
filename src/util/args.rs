@@ -85,34 +85,30 @@ pub(crate) enum Commands {
         target_host: Option<String>,
 
         /// Build host. Attempts to read default value from nix config.
-        #[arg(long, short, conflicts_with = "build_on_target", display_order = 3)]
+        #[arg(long, short, display_order = 3)]
         build_host: Option<String>,
-
-        /// Build directly on the target instead of the local machine.
-        #[arg(long, short = 'r', conflicts_with = "build_host", display_order = 4)]
-        build_on_target: bool,
 
         /// Whether deployment requires sudo authentication on the target side.
         #[arg(
             long,
             short = 's',
             default_value_if("ask_sudo_password", "true", "true"),
-            display_order = 5
+            display_order = 4
         )]
         use_remote_sudo: bool,
 
         /// Whether to ask for the remote sudo password. Implies --use-remote-sudo.
-        #[arg(long, short = 'a', display_order = 6)]
+        #[arg(long, short = 'a', display_order = 5)]
         ask_sudo_password: bool,
 
         /// Whether the build host / target host should try to use substituters directly.
         /// This is useful when the target host connection to the [c]ache is faster than
         /// the connection between builder and target.
-        #[arg(long, short = 'c', display_order = 7)]
+        #[arg(long, short = 'c', display_order = 6)]
         use_substitutes: bool,
 
         /// SSH [p]ort to use when connecting to the target or build host.
-        #[arg(long, short = 'p', display_order = 8)]
+        #[arg(long, short = 'p', display_order = 7)]
         target_port: Option<u16>,
     },
 

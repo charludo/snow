@@ -185,7 +185,6 @@ pub(crate) fn provision(
         false,
         false,
         false,
-        false,
         &None,
     )?;
     unsafe {
@@ -225,7 +224,6 @@ pub(crate) fn provision(
             &RebuildMode::Switch,
             &None,
             &None,
-            false,
             false,
             false,
             false,

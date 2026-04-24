@@ -16,7 +16,6 @@ pub(crate) fn rebuild(
     mode: &RebuildMode,
     target_host: &Option<String>,
     build_host: &Option<String>,
-    build_on_target: bool,
     use_remote_sudo: bool,
     ask_sudo_password: bool,
     use_substitutes: bool,
@@ -101,7 +100,6 @@ pub(crate) fn rebuild(
                         .ask_sudo_password
                         .unwrap_or(use_remote_sudo || default_snow_config.use_remote_sudo),
             ),
-            build_on_target: build_on_target || default_snow_config.build_on_target,
             use_substitutes: use_substitutes || default_snow_config.use_substitutes,
             build_host: build_host_resolved,
             build_me_on: None,
@@ -157,15 +155,6 @@ pub(crate) fn rebuild(
         if let Some(build_host) = snow_config.build_host {
             args.push("--build-host".to_string());
             args.push(build_host);
-        } else if snow_config.build_on_target {
-            if let Some(target_host) = snow_config.target_host.clone() {
-                args.push("--build-host".to_string());
-                args.push(target_host);
-            } else {
-                return Err(SnowError::SnowConfig(
-                    "\"build on target\" is specified, but no target host is given".to_string(),
-                ));
-            }
         }
 
         if snow_config.use_remote_sudo {
