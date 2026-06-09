@@ -52,7 +52,7 @@ pub(crate) fn provision(
             "build",
             &wrap(
                 &format!(
-                    "nixosConfigurations.{}.config.formats.proxmox",
+                    "nixosConfigurations.{}.config.system.build.images.proxmox",
                     vm_configuration
                 ),
                 true,
