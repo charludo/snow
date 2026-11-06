@@ -30,7 +30,7 @@ pub(crate) fn assimilate_prepare() -> Result<()> {
         vec!["test", "-I", &format!("nixos-config={}", tmp)],
         true,
     )
-    .run_verbose();
+    .run_verbose_checked();
 
     let _ = fs::remove_file(tmp);
     result?;
@@ -59,7 +59,7 @@ pub(crate) fn assimilate_run(target: &str, nixos_configuration: &str) -> Result<
         vec!["-o", "StrictHostKeyChecking=accept-new", target],
         false,
     )
-    .run_verbose()?;
+    .run_verbose_checked()?;
 
     // 2. Fetch the target's host public key and store it for agenix
     log::info!("Fetching host public key from {}...", target);
@@ -68,30 +68,31 @@ pub(crate) fn assimilate_run(target: &str, nixos_configuration: &str) -> Result<
         vec![target, "cat", "/etc/ssh/ssh_host_ed25519_key.pub"],
         false,
     )
-    .run_with_return()?;
+    .run_checked()?;
 
     let pubkey_path = format!("hosts/{}/ssh_host_ed25519_key.pub", nixos_configuration);
     fs::write(&pubkey_path, pubkey.trim()).map_err(SnowError::IO)?;
     log::info!("Wrote host pubkey to {}", pubkey_path);
 
-    // 3. Rekey agenix secrets to include the new host
-    log::info!("Rekeying secrets for new host...");
-    agenix_rekey(false, false)?;
-
-    // 4. Generate and save hardware configuration
+    // 3. Generate and save hardware configuration
     log::info!("Generating hardware configuration on {}...", target);
     let hw_config = SnowCommand::new(
         "ssh".to_string(),
         vec![target, "nixos-generate-config", "--show-hardware-config"],
         false,
     )
-    .run_with_return()?;
+    .run_checked()?;
 
     let hw_path = format!("hosts/{}/hardware-configuration.nix", nixos_configuration);
     fs::write(&hw_path, &hw_config).map_err(SnowError::IO)?;
     log::info!("Wrote hardware configuration to {}", hw_path);
 
-    // 5. Format, then stage everything (pubkey, rekeyed secrets, hardware config)
+    // 4. Rekey agenix secrets to include the new host
+    git_add(false)?;
+    log::info!("Rekeying secrets for new host...");
+    agenix_rekey(false, false)?;
+
+    // 5. Format, then stage everything (incl. the rekeyed secrets)
     fmt()?;
     git_add(false)?;
 
@@ -118,8 +119,22 @@ pub(crate) fn assimilate_run(target: &str, nixos_configuration: &str) -> Result<
         .prompt()
         .map_err(|_| SnowError::Env("prompt cancelled".to_string()))?;
 
+    // A TTY so sudo can ask for the password, and a delayed reboot so the SSH session can exit cleanly
     if do_reboot {
-        SnowCommand::new("ssh".to_string(), vec![target, "sudo", "reboot"], false).run_verbose()?;
+        SnowCommand::new(
+            "ssh".to_string(),
+            vec![
+                "-t",
+                target,
+                "sudo",
+                "systemd-run",
+                "--on-active=1",
+                "systemctl",
+                "reboot",
+            ],
+            false,
+        )
+        .run_verbose_checked()?;
     }
 
     Ok(())

@@ -8,6 +8,7 @@ pub(crate) enum SnowError {
     Env(String),
     SnowConfig(String),
     Proxmox(String),
+    Command(String),
     IO(std::io::Error),
 }
 
@@ -21,6 +22,7 @@ impl Display for SnowError {
                 SnowError::Env(e) => format!("Environment error: {e}"),
                 SnowError::SnowConfig(e) => format!("Error parsing snow config: {e}"),
                 SnowError::Proxmox(e) => format!("Proxmox error: {e}"),
+                SnowError::Command(e) => format!("Command failed: {e}"),
                 SnowError::IO(e) => format!("Error in interaction with shell: {e}"),
             }
         )

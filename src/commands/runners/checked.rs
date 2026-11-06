@@ -9,8 +9,8 @@ impl SnowCommand {
         let (command, args) = self.get_final_args();
         let output = Command::new(command).args(args).output()?;
         if !output.status.success() {
-            return Err(SnowError::Proxmox(format!(
-                "`{}` failed: {}",
+            return Err(SnowError::Command(format!(
+                "`{}`: {}",
                 self,
                 String::from_utf8_lossy(&output.stderr).trim()
             )));
