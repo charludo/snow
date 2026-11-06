@@ -189,7 +189,7 @@ pub(crate) fn rebuild(
     match LOG_LEVEL.get() {
         Some(LevelFilter::Debug) => {
             command.append_arg("--show-trace");
-            command.run_verbose()?
+            command.run_verbose_checked()?
         }
         _ => command.run_progress(nixos_configuration.to_string())?,
     }
@@ -225,7 +225,7 @@ pub(crate) fn home(home_configuration: &Option<String>) -> Result<()> {
     match LOG_LEVEL.get() {
         Some(LevelFilter::Debug) => {
             command.append_arg("--show-trace");
-            command.run_verbose()?
+            command.run_verbose_checked()?
         }
         _ => command.run_progress(target.to_string())?,
     }
