@@ -4,7 +4,7 @@ use crate::{
         runners::SnowCommand,
         util::{SnowConfig, VmConfigResolved, wrap},
     },
-    git_add, rebuild,
+    git_add, rebuild, respec, set_vm_status,
 };
 use std::{thread, time::Duration};
 
@@ -101,35 +101,11 @@ pub(crate) fn provision(
         vm_config.proxmox_image_store, vm_config.id
     ))?;
 
-    // Resize disks according to nix vm config
-    let command = SnowCommand::new(
-        "ssh".to_string(),
-        vec![
-            &vm_config.proxmox_host,
-            &format!(
-                "qm disk resize {} virtio0 {}",
-                vm_config.id, vm_config.resize_disk_to
-            ),
-        ],
-        false,
-    );
-    log::info!(
-        "Increasing disk size of disk \"vm_datastore:vm-{}-disk-0\" (virtio0) to {}...",
-        vm_config.id,
-        vm_config.resize_disk_to
-    );
-    command.run_silent().or_cleanup()?;
-
-    // Boot the VM for the first time
-    let command = SnowCommand::new(
-        "ssh".to_string(),
-        vec![
-            &vm_config.proxmox_host,
-            &format!("qm start {}", vm_config.id),
-        ],
-        false,
-    );
-    command.run_silent().or_cleanup()?;
+    // Grow the disk and put the VM under HA, which boots it on a node its affinity rule allows
+    respec(vm_configuration, false, true)?;
+    if vm_config.ha.is_none() {
+        set_vm_status(&vm_config.proxmox_host, vm_config.id, "start")?;
+    }
 
     // Remove any stale known_hosts entries so re-provisioning doesn't fail on key mismatch
     let _ =
@@ -158,6 +134,21 @@ pub(crate) fn provision(
             );
         };
     };
+
+    // Auto-accept the new VM key, now that the VM is known to be up
+    if let Some(ref target_host) = snow_config.target_host {
+        let command = SnowCommand::new(
+            "ssh".to_string(),
+            vec![
+                "-o",
+                "StrictHostKeyChecking=accept-new",
+                target_host,
+                "true",
+            ],
+            false,
+        );
+        command.run_silent()?;
+    }
 
     // Save pubkey and add to git
     std::fs::write(
@@ -192,30 +183,8 @@ pub(crate) fn provision(
     }
 
     // Reboot the VM so the new config with secret keys can become active
-    let command = SnowCommand::new(
-        "ssh".to_string(),
-        vec![
-            &vm_config.proxmox_host,
-            &format!("qm reboot {}", vm_config.id),
-        ],
-        false,
-    );
     log::info!("Rebooting {vm_configuration}...");
-    command.run_silent()?;
-
-    // Auto-accept the new VM key, and use the opportunity to run resize2fs
-    let command = SnowCommand::new(
-        "ssh".to_string(),
-        vec![
-            "-o",
-            "StrictHostKeyChecking=accept-new",
-            &snow_config.target_host.clone().unwrap(),
-            "sudo",
-            "resize2fs /dev/vda2",
-        ],
-        false,
-    );
-    command.run_silent()?;
+    set_vm_status(&vm_config.proxmox_host, vm_config.id, "reboot")?;
 
     // OPTIONALLY: rebuild the local host to make its SSH handle available
     if rebuild_host {

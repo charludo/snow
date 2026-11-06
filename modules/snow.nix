@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, ... }:
 with lib;
 {
   options.snow = {
@@ -102,5 +102,61 @@ with lib;
       default = null;
       description = "Amount of GiB to which the disk size will be increased upon VM creation";
     };
+
+    vm.ha = mkOption {
+      type = types.nullOr (
+        types.submodule {
+          options = {
+            affinity.positive = mkOption {
+              type = types.nullOr (types.nonEmptyListOf types.str);
+              default = null;
+              example = [
+                "node1"
+                "node2"
+              ];
+              description = ''
+                Nodes of the positive HA node affinity rule the VM belongs in, in order of preference.
+                Make sure that a corresponding affinity rule pre-exists.
+
+                Mutually exclusive with `vm.ha.affinity.negative`.
+              '';
+            };
+
+            affinity.negative = mkOption {
+              type = types.nullOr (types.nonEmptyListOf types.str);
+              default = null;
+              example = [ "node1" ];
+              description = ''
+                Nodes of the negative HA node affinity rule the VM belongs in.
+                Make sure that a corresponding affinity rule pre-exists.
+
+                Mutually exclusive with `vm.ha.affinity.positive`.
+              '';
+            };
+
+            strict = mkOption {
+              type = types.bool;
+              default = true;
+              description = "Whether the HA node affinity rule is strict";
+            };
+          };
+        }
+      );
+      default = null;
+      description = ''
+        HA settings of the VM. If set, the VM is HA-managed, and in a node affinity rule if one of `affinity.positive` and `affinity.negative` is set.
+        If null, snow does not touch HA.
+      '';
+    };
   };
+
+  config.assertions = [
+    {
+      assertion =
+        config.snow.vm.ha == null
+        || config.snow.vm.ha.affinity.positive == null
+        || config.snow.vm.ha.affinity.negative == null;
+      message = "snow.vm.ha.affinity: only one of `positive` and `negative` can be set, as a VM can only be in one node affinity rule";
+    }
+  ];
 }

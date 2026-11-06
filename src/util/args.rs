@@ -129,6 +129,19 @@ pub(crate) enum Commands {
         rebuild_host_machine: bool,
     },
 
+    /// Apply the Proxmox spec from the nix config (cores, memory, disk size, HA, ...) to an existing VM.
+    Respec {
+        vm_configuration: String,
+
+        /// Reboot the VM afterwards, so that changes which are not hotpluggable take effect.
+        #[arg(long, short)]
+        reboot: bool,
+
+        /// Apply the changes without asking for confirmation.
+        #[arg(long, short)]
+        yes: bool,
+    },
+
     /// Print just the missing hash of a build process.
     Hash { output: Option<String> },
 

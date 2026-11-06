@@ -48,6 +48,11 @@ fn main() {
             login_after_setup,
             rebuild_host_machine,
         } => provision(vm_configuration, *login_after_setup, *rebuild_host_machine),
+        Commands::Respec {
+            vm_configuration,
+            reboot,
+            yes,
+        } => respec(vm_configuration, *reboot, *yes),
         Commands::Hash { output } => build(output, true),
         Commands::Build { output } => build(output, false),
         Commands::Run { output } => run(output),

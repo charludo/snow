@@ -28,6 +28,20 @@ pub(crate) struct VmConfig {
     pub(crate) proxmox_host: Option<String>,
     pub(crate) proxmox_image_store: Option<String>,
     pub(crate) resize_disk_to: Option<String>,
+    pub(crate) ha: Option<HaConfig>,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct HaConfig {
+    pub(crate) affinity: Affinity,
+    pub(crate) strict: bool,
+}
+
+#[derive(Deserialize, Serialize)]
+pub(crate) struct Affinity {
+    pub(crate) positive: Option<Vec<String>>,
+    pub(crate) negative: Option<Vec<String>>,
 }
 
 pub(crate) struct VmConfigResolved {
@@ -36,6 +50,7 @@ pub(crate) struct VmConfigResolved {
     pub(crate) proxmox_host: String,
     pub(crate) proxmox_image_store: String,
     pub(crate) resize_disk_to: String,
+    pub(crate) ha: Option<HaConfig>,
 }
 
 impl SnowConfig {
@@ -56,6 +71,14 @@ impl TryFrom<VmConfig> for VmConfigResolved {
     type Error = SnowError;
 
     fn try_from(value: VmConfig) -> Result<Self> {
+        if let Some(ha) = &value.ha
+            && ha.affinity.positive.is_some()
+            && ha.affinity.negative.is_some()
+        {
+            return Err(SnowError::SnowConfig(
+                "a VM can only be in one node affinity rule, but both a positive and a negative one are set".to_string(),
+            ));
+        }
         Ok(Self {
             id: value
                 .id
@@ -72,6 +95,7 @@ impl TryFrom<VmConfig> for VmConfigResolved {
             resize_disk_to: value
                 .resize_disk_to
                 .ok_or_else(|| SnowError::SnowConfig("missing resize_disk_to".to_string()))?,
+            ha: value.ha,
         })
     }
 }

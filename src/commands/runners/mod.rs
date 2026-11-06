@@ -1,3 +1,4 @@
+mod checked;
 mod interactive;
 mod progress;
 mod silent;
