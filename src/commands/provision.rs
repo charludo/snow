@@ -202,12 +202,10 @@ pub(crate) fn provision(
 
     // OPTIONALLY: log the user into the new VM via SSH
     if login_after {
-        let command = SnowCommand::new(
-            "ssh".to_string(),
-            vec![&snow_config.target_host.unwrap()],
-            false,
-        );
-        command.run_silent()?;
+        let target_host = snow_config.target_host.ok_or_else(|| {
+            SnowError::SnowConfig(format!("{vm_configuration} has no targetHost to log into"))
+        })?;
+        SnowCommand::new("ssh".to_string(), vec![&target_host], false).run_verbose()?;
     }
     log::info!("Done!");
 
