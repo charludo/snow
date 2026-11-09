@@ -1,4 +1,4 @@
-use crate::commands::util::{Tone, prefixed, read_from_repl, say, styled, wrap};
+use crate::commands::util::{Phase, Tone, prefixed, read_from_repl, say, styled, wrap};
 use crate::util::Result;
 use crate::{SnowError, verbose};
 use gethostname::gethostname;
@@ -14,10 +14,11 @@ use users::get_current_username;
 
 use super::runners::{Deploy, Job, JobResult, Live, SnowCommand};
 use super::util::{BuilderConfig, SnowConfig};
-use super::{RebuildMode, exist_untracked, git_add};
+use super::{RebuildMode, cache_store, copy_to_cache, exist_untracked, git_add};
 
 const REMOTE: &str = "→";
 const LOCAL: &str = "●";
+const CACHE: &str = "⇡";
 
 /// Settings from the command line, which take precedence over those of a host's snow config
 #[derive(Default)]
@@ -30,6 +31,14 @@ pub(crate) struct Flags<'a> {
     pub(crate) target_port: Option<u16>,
     pub(crate) builders: &'a [String],
     pub(crate) parallel: Option<usize>,
+    pub(crate) cache: Option<Option<&'a str>>,
+}
+
+struct Built {
+    name: String,
+    build_host: Option<String>,
+    target_port: Option<u16>,
+    out: Option<String>,
 }
 
 /// How `nixos-rebuild` is run for one host
@@ -81,6 +90,7 @@ pub(crate) fn rebuild(
     if !flags.builders.is_empty() {
         ensure_trusted()?;
     }
+    let cache = flags.cache.map(cache_store).transpose()?;
 
     let hostname = gethostname().into_string().unwrap_or_default();
     let started = Instant::now();
@@ -124,8 +134,8 @@ pub(crate) fn rebuild(
         }
         Selection::Hosts(selected) => (selected, false),
     };
-    let (results, skipped) = Live::run(|live| {
-        rebuild_many(
+    let (results, skipped, cached) = Live::run(|live| {
+        let (results, skipped, built) = rebuild_many(
             live,
             selected,
             single,
@@ -133,9 +143,124 @@ pub(crate) fn rebuild(
             flags,
             machines.as_deref(),
             &hostname,
-        )
+        )?;
+        let cached = match &cache {
+            Some(store) if !built.is_empty() => push_to_cache(live, store, built),
+            _ => Ok(()),
+        };
+        Ok::<_, SnowError>((results, skipped, cached))
     })?;
-    report(results, skipped, started)
+    report(results, skipped, started)?;
+    cached
+}
+
+fn push_to_cache(live: &Live, store: &str, mut built: Vec<Built>) -> Result<()> {
+    built.retain(|built| {
+        built
+            .build_host
+            .as_deref()
+            .is_none_or(|build_host| ssh_host(build_host) != ssh_host(store))
+    });
+    if built.is_empty() {
+        return Ok(());
+    }
+    let unknown = Vec::from_iter(
+        built
+            .iter()
+            .filter(|built| built.out.is_none())
+            .map(|built| nix_string(&built.name)),
+    );
+    if !unknown.is_empty() {
+        live.screen().set_status(format!(
+            "Evaluating {} to push",
+            plural(unknown.len(), "system")
+        ));
+        let expr = format!(
+            "cs: builtins.listToAttrs (map (name: {{ inherit name; \
+             value = cs.${{name}}.config.system.build.toplevel.outPath; }}) [ {} ])",
+            unknown.join(" ")
+        );
+        match apply::<BTreeMap<String, String>>(&expr) {
+            Ok(mut outs) => {
+                for built in &mut built {
+                    if built.out.is_none() {
+                        built.out = outs.remove(&built.name);
+                    }
+                }
+            }
+            Err(e) => {
+                let message = format!("Could not evaluate the systems to push: {}", e.message());
+                live.screen().message(Tone::Bad, None, &message);
+                return Err(SnowError::Reported);
+            }
+        }
+    }
+
+    let mut sources: BTreeMap<(Option<String>, Option<u16>), Vec<String>> = BTreeMap::new();
+    for built in built {
+        if let Some(out) = built.out {
+            sources
+                .entry((
+                    built.build_host.clone(),
+                    built.build_host.and(built.target_port),
+                ))
+                .or_default()
+                .push(out);
+        }
+    }
+    let mut success = true;
+    for ((build_host, target_port), outs) in sources {
+        let from = build_host.as_ref().map(|host| format!("ssh-ng://{host}"));
+        let mut command = copy_to_cache(store, from.as_deref(), &outs);
+        if let Some(port) = target_port {
+            command.set_env("NIX_SSHOPTS", &ssh_opts(port));
+        }
+        let name = match &build_host {
+            Some(build_host) => format!("cache from {build_host}"),
+            None => "cache".to_string(),
+        };
+        let mut screen = live.screen();
+        screen.set_status(format!(
+            "Pushing {} to {store}",
+            plural(outs.len(), "system")
+        ));
+        let row = screen.add_row(&format!("{CACHE} {name}"), false, false);
+        screen.set_job(row, Phase::Deploying, "pushing");
+        drop(screen);
+        let result = live.run_step(
+            row,
+            Job {
+                name,
+                command,
+                last: false,
+                note: String::new(),
+                note_queued: false,
+                deploy: Deploy::Now,
+            },
+        );
+        if let Err(e) = result.result {
+            live.screen()
+                .message(Tone::Bad, Some(&result.name), &e.message());
+            success = false;
+        }
+    }
+    match success {
+        true => Ok(()),
+        false => Err(SnowError::Reported),
+    }
+}
+
+fn ssh_host(uri: &str) -> &str {
+    let host = uri.split_once("://").map_or(uri, |(_, rest)| rest);
+    let host = host.split_once('?').map_or(host, |(host, _)| host);
+    host.rsplit_once('@').map_or(host, |(_, host)| host)
+}
+
+fn ssh_opts(port: u16) -> String {
+    match std::env::var("NIX_SSHOPTS") {
+        Ok(opts) if !opts.is_empty() => format!("{opts} -p {port}"),
+        _ => format!("-p {port}"),
+    }
 }
 
 fn confirm_target(
@@ -300,11 +425,7 @@ impl Plan {
             self.local && !build_only,
         );
         if let Some(port) = self.target_port {
-            let opts = match std::env::var("NIX_SSHOPTS") {
-                Ok(opts) if !opts.is_empty() => format!("{opts} -p {port}"),
-                _ => format!("-p {port}"),
-            };
-            command.set_env("NIX_SSHOPTS", &opts);
+            command.set_env("NIX_SSHOPTS", &ssh_opts(port));
         }
         command
     }
@@ -504,7 +625,7 @@ fn rebuild_many(
     flags: &Flags,
     machines: Option<&str>,
     hostname: &str,
-) -> Result<(Vec<JobResult>, usize)> {
+) -> Result<(Vec<JobResult>, usize, Vec<Built>)> {
     if !unknown.is_empty() {
         // Most likely, the shell expanded an unquoted `*` into the files here
         let hint = match unknown.iter().any(|atom| Path::new(atom).exists()) {
@@ -603,7 +724,7 @@ fn rebuild_many(
     if plans.is_empty() {
         live.screen()
             .set_retry(retry_command(&failures(&results), mode, flags));
-        return Ok((results, skipped));
+        return Ok((results, skipped, Vec::new()));
     }
 
     let mut remote: BTreeMap<&str, Vec<&Plan>> = BTreeMap::new();
@@ -627,7 +748,7 @@ fn rebuild_many(
             ))
         })?,
     };
-    let (built_only, job_results) = live.run_jobs(parallel, |queue| {
+    let ((built_only, mut built_here_outs), job_results) = live.run_jobs(parallel, |queue| {
         for (build_host, plans) in &remote {
             live.screen()
                 .add_group(&format!("{REMOTE} {build_host}"), true);
@@ -641,7 +762,7 @@ fn rebuild_many(
                 "{verb} {}",
                 on_build_hosts(&per_build_host, Some("host"))
             ));
-            return Vec::new();
+            return (Vec::new(), BTreeMap::new());
         }
         let names = Vec::from_iter(here.iter().map(|plan| plan.name.as_str()));
         let mut group = format!("{LOCAL} {hostname}");
@@ -684,7 +805,7 @@ fn rebuild_many(
                 .set_status(format!("{verb} {}", plural(to_send.len(), "host")));
         }
         queue.send(to_send);
-        built_only
+        (built_only, built.unwrap_or_default())
     });
     results.extend(built_only);
     results.extend(job_results);
@@ -692,7 +813,18 @@ fn rebuild_many(
     if !failed.is_empty() {
         live.screen().set_retry(retry_command(&failed, mode, flags));
     }
-    Ok((results, skipped))
+    let built = Vec::from_iter(
+        plans
+            .into_iter()
+            .filter(|plan| !failed.contains(&plan.name.as_str()))
+            .map(|plan| Built {
+                out: built_here_outs.remove(&plan.name),
+                name: plan.name,
+                build_host: plan.build_host,
+                target_port: plan.target_port,
+            }),
+    );
+    Ok((results, skipped, built))
 }
 
 fn failures<'a>(results: impl IntoIterator<Item = &'a JobResult>) -> Vec<&'a str> {
@@ -781,6 +913,11 @@ fn retry_command(hosts: &[&str], mode: &RebuildMode, flags: &Flags) -> Vec<Strin
     }
     if let Some(parallel) = flags.parallel {
         args.extend(["-P".to_string(), parallel.to_string()]);
+    }
+    match flags.cache {
+        Some(Some(cache)) => args.push(format!("--cache={}", quote(cache))),
+        Some(None) => args.push("-C".to_string()),
+        None => {}
     }
     args
 }
@@ -982,6 +1119,38 @@ fn test_retry_command() {
         .join(" "),
         "snow rebuild web -m boot -t root@10.0.0.2"
     );
+    assert_eq!(
+        retry_command(
+            &["web"],
+            &RebuildMode::Switch,
+            &Flags {
+                cache: Some(None),
+                ..Flags::default()
+            }
+        )
+        .join(" "),
+        "snow rebuild web -m switch -C"
+    );
+    assert_eq!(
+        retry_command(
+            &["web"],
+            &RebuildMode::Switch,
+            &Flags {
+                cache: Some(Some("ssh-ng://root@gsv")),
+                ..Flags::default()
+            }
+        )
+        .join(" "),
+        "snow rebuild web -m switch --cache=ssh-ng://root@gsv"
+    );
+}
+
+#[test]
+fn test_ssh_host() {
+    assert_eq!(ssh_host("gsv"), "gsv");
+    assert_eq!(ssh_host("root@gsv"), "gsv");
+    assert_eq!(ssh_host("ssh-ng://root@gsv"), "gsv");
+    assert_eq!(ssh_host("ssh://gsv?compress=true"), "gsv");
 }
 
 #[test]

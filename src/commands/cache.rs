@@ -5,19 +5,43 @@ use crate::util::Result;
 use std::path::Path;
 
 pub(crate) fn cache(targets: &[String], to: &Option<String>) -> Result<()> {
-    let to = to.as_deref().ok_or_else(|| {
-        SnowError::Env("no cache configured: set snow.cache, $SNOW_CACHE or pass --to".to_string())
-    })?;
-    let store = match to.contains("://") {
-        true => to.to_string(),
-        false => format!("ssh-ng://{to}"),
-    };
+    let store = cache_store(to.as_deref())?;
     let installables = resolve_installables(targets)?;
+    copy_to_cache(&store, None, &installables).run_verbose_checked()
+}
 
-    let mut args = vec!["copy", "--to", &store];
-    args.extend(installables.iter().map(String::as_str));
-    let command = SnowCommand::new_nix("nix".to_string(), args, false);
-    command.run_verbose_checked()
+/// The store URI of the cache `to`, or else of the one configured in snow.cache
+pub(crate) fn cache_store(to: Option<&str>) -> Result<String> {
+    let to = match to {
+        Some(to) => to.to_string(),
+        None => std::env::var("SNOW_CACHE")
+            .ok()
+            .filter(|to| !to.is_empty())
+            .ok_or_else(|| {
+                SnowError::Env(
+                    "no cache configured: set snow.cache, $SNOW_CACHE or pass one explicitly"
+                        .to_string(),
+                )
+            })?,
+    };
+    Ok(match to.contains("://") {
+        true => to,
+        false => format!("ssh-ng://{to}"),
+    })
+}
+
+/// Copy `installables` to `store`, from the store `from` instead of the local one if given
+pub(super) fn copy_to_cache(
+    store: &str,
+    from: Option<&str>,
+    installables: &[impl AsRef<str>],
+) -> SnowCommand {
+    let mut args = vec!["copy", "--to", store];
+    if let Some(from) = from {
+        args.extend(["--from", from]);
+    }
+    args.extend(installables.iter().map(AsRef::as_ref));
+    SnowCommand::new_nix("nix".to_string(), args, false)
 }
 
 fn resolve_installables(targets: &[String]) -> Result<Vec<String>> {

@@ -41,6 +41,7 @@ fn main() {
             target_port,
             builders,
             parallel,
+            cache,
         } => rebuild(
             selectors,
             exclude,
@@ -54,6 +55,7 @@ fn main() {
                 target_port: *target_port,
                 builders,
                 parallel: *parallel,
+                cache: cache.as_ref().map(Option::as_deref),
             },
         ),
         Commands::Home { home_configuration } => home(home_configuration),
@@ -67,8 +69,10 @@ fn main() {
             reboot,
             yes,
         } => respec(vm_configuration, *reboot, *yes),
-        Commands::Hash { output } => build(output, true),
-        Commands::Build { output } => build(output, false),
+        Commands::Hash { output } => build(output, true, None),
+        Commands::Build { output, cache } => {
+            build(output, false, cache.as_ref().map(Option::as_deref))
+        }
         Commands::Run { output } => run(output),
         Commands::Cache { targets, to } => cache(targets, to),
         Commands::Update { input } => update(input),

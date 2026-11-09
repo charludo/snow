@@ -129,6 +129,17 @@ pub(crate) enum Commands {
         /// Hosts and tags to to e[x]clude. Supports `a+b` to deselect the intersection of tags.
         #[arg(long, short = 'x', requires = "selectors", display_order = 9)]
         exclude: Vec<String>,
+
+        /// Push the built systems to the binary [C]ache after building.
+        #[arg(
+            long,
+            short = 'C',
+            num_args = 0..=1,
+            require_equals = true,
+            value_name = "URI",
+            display_order = 10
+        )]
+        cache: Option<Option<String>>,
     },
 
     /// Rebuild only the HomeManager config for the current user and host.
@@ -165,7 +176,13 @@ pub(crate) enum Commands {
     Hash { output: Option<String> },
 
     /// Build the default or specified output. Supports git submodules.
-    Build { output: Option<String> },
+    Build {
+        output: Option<String>,
+
+        /// Push the output to the binary [C]ache after building.
+        #[arg(long, short = 'C', num_args = 0..=1, require_equals = true, value_name = "URI")]
+        cache: Option<Option<String>>,
+    },
 
     /// Run the default or specified output, building it first if necessary. Supports git submodules.
     Run { output: Option<String> },
@@ -177,7 +194,7 @@ pub(crate) enum Commands {
         targets: Vec<String>,
 
         /// Nix store URI to copy [t]o. A bare host is treated as ssh-ng://<host>.
-        #[arg(long, short, env = "SNOW_CACHE")]
+        #[arg(long, short)]
         to: Option<String>,
     },
 
