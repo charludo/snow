@@ -104,6 +104,7 @@ fn main() {
             raw,
         } => eval(expression, *json, *raw),
         Commands::Tags { hostname } => tags(hostname),
+        Commands::Config { hostname } => config(hostname),
         Commands::Fmt => fmt(),
         Commands::Check => check(),
         Commands::Bump { subcommand } => match subcommand {

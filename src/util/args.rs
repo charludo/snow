@@ -258,6 +258,9 @@ pub(crate) enum Commands {
     /// Print the snow tags set on the given host.
     Tags { hostname: String },
 
+    /// Print the snow config of the given host as JSON.
+    Config { hostname: String },
+
     /// Run nix fmt.
     Fmt,
 

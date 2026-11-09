@@ -57,6 +57,16 @@ pub(crate) fn tags(hostname: &str) -> Result<()> {
     Ok(())
 }
 
+pub(crate) fn config(hostname: &str) -> Result<()> {
+    let raw = read_from_repl(
+        &format!("nixosConfigurations.{hostname}.config.snow"),
+        vec!["--json"],
+    )?;
+    let config: serde_json::Value = serde_json::from_str(&raw)?;
+    println!("{}", serde_json::to_string_pretty(&config)?);
+    Ok(())
+}
+
 #[test]
 fn test_fmt() {
     testing_logger::setup();
