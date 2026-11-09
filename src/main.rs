@@ -65,10 +65,11 @@ fn main() {
             rebuild_host_machine,
         } => provision(vm_configuration, *login_after_setup, *rebuild_host_machine),
         Commands::Respec {
-            vm_configuration,
+            selectors,
+            exclude,
             reboot,
             yes,
-        } => respec(vm_configuration, *reboot, *yes),
+        } => respec(selectors, exclude, *reboot, *yes),
         Commands::Hash { output } => build(output, true, None),
         Commands::Build { output, cache } => {
             build(output, false, cache.as_ref().map(Option::as_deref))

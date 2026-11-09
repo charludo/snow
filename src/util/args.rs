@@ -126,7 +126,7 @@ pub(crate) enum Commands {
         #[arg(long, short = 'P', display_order = 8)]
         parallel: Option<usize>,
 
-        /// Hosts and tags to to e[x]clude. Supports `a+b` to deselect the intersection of tags.
+        /// Hosts and tags to e[x]clude. Supports `a+b` to deselect the intersection of tags.
         #[arg(long, short = 'x', requires = "selectors", display_order = 9)]
         exclude: Vec<String>,
 
@@ -159,9 +159,15 @@ pub(crate) enum Commands {
         rebuild_host_machine: bool,
     },
 
-    /// Apply the Proxmox spec from the nix config (cores, memory, disk size, HA, ...) to an existing VM.
+    /// Apply the Proxmox spec from the nix config (cores, memory, disk size, HA, ...) to existing VMs.
     Respec {
-        vm_configuration: String,
+        /// VMs and tags to respec. Supports `a+b` to select the intersection of tags, and `"*"` for all hosts.
+        #[arg(required = true)]
+        selectors: Vec<String>,
+
+        /// Hosts and tags to e[x]clude. Supports `a+b` to deselect the intersection of tags.
+        #[arg(long, short = 'x')]
+        exclude: Vec<String>,
 
         /// Reboot the VM afterwards, so that changes which are not hotpluggable take effect.
         #[arg(long, short)]

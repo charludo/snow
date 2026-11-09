@@ -2,6 +2,7 @@ use crate::{
     Result, SnowError,
     commands::{
         runners::SnowCommand,
+        select_hosts,
         util::{HaConfig, SnowConfig, VmConfigResolved, read_from_repl},
     },
 };
@@ -309,8 +310,52 @@ fn plan_ha(
     Ok(())
 }
 
-pub(crate) fn respec(vm_configuration: &str, reboot: bool, yes: bool) -> Result<()> {
-    let vm_config: VmConfigResolved = SnowConfig::get_snow_config(vm_configuration)?
+pub(crate) fn respec(
+    selectors: &[String],
+    exclude: &[String],
+    reboot: bool,
+    yes: bool,
+) -> Result<()> {
+    let (hosts, single) = select_hosts(selectors, exclude)?;
+    if single {
+        let (name, config) = hosts.into_iter().next().expect("one host is selected");
+        return respec_host(&name, config, reboot, yes);
+    }
+
+    let (vms, others): (Vec<_>, Vec<_>) = hosts.into_iter().partition(|(_, c)| c.vm.is_some());
+    if !others.is_empty() {
+        log::info!(
+            "Skipping hosts without VM settings: {}",
+            Vec::from_iter(others.iter().map(|(name, _)| name.as_str())).join(", ")
+        );
+    }
+    if vms.is_empty() {
+        return Err(SnowError::SnowConfig("no VMs are selected".to_string()));
+    }
+
+    let mut failures = Vec::new();
+    for (name, config) in vms {
+        if let Err(e) = respec_host(&name, config, reboot, yes) {
+            log::error!("Could not respec {name}: {}", e.message());
+            failures.push(name);
+        }
+    }
+    match failures.is_empty() {
+        true => Ok(()),
+        false => Err(SnowError::SnowConfig(format!(
+            "could not respec {}",
+            failures.join(", ")
+        ))),
+    }
+}
+
+pub(crate) fn respec_host(
+    vm_configuration: &str,
+    snow_config: SnowConfig,
+    reboot: bool,
+    yes: bool,
+) -> Result<()> {
+    let vm_config: VmConfigResolved = snow_config
         .vm
         .ok_or_else(|| {
             SnowError::SnowConfig(format!(

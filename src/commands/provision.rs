@@ -4,7 +4,7 @@ use crate::{
         runners::SnowCommand,
         util::{SnowConfig, VmConfigResolved, wrap},
     },
-    git_add, rebuild, respec, set_vm_status,
+    git_add, rebuild, respec_host, set_vm_status,
 };
 use std::{thread, time::Duration};
 
@@ -102,7 +102,12 @@ pub(crate) fn provision(
     ))?;
 
     // Grow the disk and put the VM under HA, which boots it on a node its affinity rule allows
-    respec(vm_configuration, false, true)?;
+    respec_host(
+        vm_configuration,
+        SnowConfig::get_snow_config(vm_configuration)?,
+        false,
+        true,
+    )?;
     if vm_config.ha.is_none() {
         set_vm_status(&vm_config.proxmox_host, vm_config.id, "start")?;
     }

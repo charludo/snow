@@ -613,6 +613,48 @@ fn select(selectors: &[String], exclude: &[String]) -> Result<Selection> {
     })
 }
 
+fn ensure_known(unknown: &[String]) -> Result<()> {
+    if unknown.is_empty() {
+        return Ok(());
+    }
+    // Most likely, the shell expanded an unquoted `*` into the files here
+    let hint = match unknown.iter().any(|atom| Path::new(atom).exists()) {
+        true => " (quote '*', so that the shell does not expand it)",
+        false => "",
+    };
+    Err(SnowError::SnowConfig(format!(
+        "there are no hosts or tags named {}{hint}",
+        unknown.join(", ")
+    )))
+}
+
+/// The hosts matching `selectors` but not `exclude`, and whether a single host was named.
+pub(crate) fn select_hosts(
+    selectors: &[String],
+    exclude: &[String],
+) -> Result<(BTreeMap<String, SnowConfig>, bool)> {
+    match select(selectors, exclude)? {
+        Selection::Host(config) => Ok((BTreeMap::from([(selectors[0].clone(), *config)]), true)),
+        Selection::Hosts(Selected {
+            hosts,
+            broken,
+            unknown,
+        }) => {
+            ensure_known(&unknown)?;
+            if !broken.is_empty() {
+                log::warn!(
+                    "Skipping hosts that could not be evaluated: {}",
+                    broken.join(", ")
+                );
+            }
+            if hosts.is_empty() {
+                return Err(SnowError::SnowConfig("no hosts are selected".to_string()));
+            }
+            Ok((hosts, false))
+        }
+    }
+}
+
 fn rebuild_many(
     live: &Live,
     Selected {
@@ -626,17 +668,7 @@ fn rebuild_many(
     machines: Option<&str>,
     hostname: &str,
 ) -> Result<(Vec<JobResult>, usize, Vec<Built>)> {
-    if !unknown.is_empty() {
-        // Most likely, the shell expanded an unquoted `*` into the files here
-        let hint = match unknown.iter().any(|atom| Path::new(atom).exists()) {
-            true => " (quote '*', so that the shell does not expand it)",
-            false => "",
-        };
-        return Err(SnowError::SnowConfig(format!(
-            "there are no hosts or tags named {}{hint}",
-            unknown.join(", ")
-        )));
-    }
+    ensure_known(&unknown)?;
 
     let mut messages = Vec::new();
     if !broken.is_empty() {
