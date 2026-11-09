@@ -103,6 +103,7 @@ fn main() {
             json,
             raw,
         } => eval(expression, *json, *raw),
+        Commands::Tags { hostname } => tags(hostname),
         Commands::Fmt => fmt(),
         Commands::Check => check(),
         Commands::Bump { subcommand } => match subcommand {

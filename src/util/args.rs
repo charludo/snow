@@ -255,6 +255,9 @@ pub(crate) enum Commands {
         submodules_only: bool,
     },
 
+    /// Print the snow tags set on the given host.
+    Tags { hostname: String },
+
     /// Run nix fmt.
     Fmt,
 

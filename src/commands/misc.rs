@@ -1,4 +1,8 @@
-use crate::{commands::util::wrap, options::RebuildMode, util::Result};
+use crate::{
+    commands::util::{read_from_repl, wrap},
+    options::RebuildMode,
+    util::Result,
+};
 
 use super::{Flags, rebuild, runners::SnowCommand};
 
@@ -38,6 +42,18 @@ pub(crate) fn check() -> Result<()> {
     let args = vec!["flake", "check", &wrapped];
     let command = SnowCommand::new_nix("nix".to_string(), args, false);
     command.run_verbose()?;
+    Ok(())
+}
+
+pub(crate) fn tags(hostname: &str) -> Result<()> {
+    let raw = read_from_repl(
+        &format!("nixosConfigurations.{hostname}.config.snow.tags"),
+        vec!["--json"],
+    )?;
+    let tags: Vec<String> = serde_json::from_str(&raw)?;
+    for tag in tags {
+        println!("{tag}");
+    }
     Ok(())
 }
 
