@@ -70,6 +70,7 @@ fn main() {
         Commands::Hash { output } => build(output, true),
         Commands::Build { output } => build(output, false),
         Commands::Run { output } => run(output),
+        Commands::Cache { targets, to } => cache(targets, to),
         Commands::Update { input } => update(input),
         Commands::Repl => repl(),
         Commands::Why { derivation } => referrers_closure(derivation),

@@ -82,6 +82,17 @@ with lib;
       '';
     };
 
+    cache = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "root@cache.example.com";
+      description = ''
+        Nix store URI `snow cache` copies build outputs to.
+        A bare host is treated as `ssh-ng://<host>`.
+        Can be overridden with `--to` / `-t` on the command line
+      '';
+    };
+
     builder = mkOption {
       type = types.nullOr (
         types.submodule {
@@ -187,6 +198,10 @@ with lib;
         If null, snow does not touch HA.
       '';
     };
+  };
+
+  config.environment.sessionVariables = mkIf (config.snow.cache != null) {
+    SNOW_CACHE = config.snow.cache;
   };
 
   config.assertions = [

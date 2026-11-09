@@ -170,6 +170,17 @@ pub(crate) enum Commands {
     /// Run the default or specified output, building it first if necessary. Supports git submodules.
     Run { output: Option<String> },
 
+    /// Push build outputs and their closure to a binary cache.
+    Cache {
+        /// Store paths, paths to store symlinks, flake references, or outputs of the current flake.
+        /// Defaults to ./result.
+        targets: Vec<String>,
+
+        /// Nix store URI to copy [t]o. A bare host is treated as ssh-ng://<host>.
+        #[arg(long, short, env = "SNOW_CACHE")]
+        to: Option<String>,
+    },
+
     /// Enter the default shell specified in the current flake.nix, or the shell specified.
     Develop { shell_name: Option<String> },
 
