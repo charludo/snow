@@ -30,7 +30,7 @@
         fenix' = fenix.packages.${system};
         toolchain = fenix'.fromToolchainFile {
           file = ./rust-toolchain.toml;
-          sha256 = "sha256-eJQEH3Nhkib52jvDqq2wdEmewxXbdl1oN6OGTGf7WH4=";
+          sha256 = "sha256-Ya1861La/Q70m/4KN5JZ0lhwOehAmGAhxJ3wCGQODSM=";
         };
 
         cargoNix = crate2nix.tools.${system}.generatedCargoNix {

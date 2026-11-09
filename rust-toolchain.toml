@@ -1,5 +1,5 @@
 [toolchain]
-channel = "nightly-2025-08-19"
+channel = "nightly-2026-11-09"
 profile = "default"
 components = ["miri", "rust-analyzer"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl"]
