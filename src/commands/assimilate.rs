@@ -8,7 +8,7 @@ use crate::options::RebuildMode;
 use crate::util::Result;
 
 use super::runners::SnowCommand;
-use super::{agenix_rekey, fmt, git_add, rebuild};
+use super::{Flags, agenix_rekey, fmt, git_add, rebuild};
 
 // Minimal config that enables SSH, flakes, and trusted-users on a stock NixOS installation,
 // importing the existing configuration so nothing else changes. Uses `nixos-rebuild test` so
@@ -96,28 +96,28 @@ pub(crate) fn assimilate_run(target: &str, nixos_configuration: &str) -> Result<
     fmt()?;
     git_add(false)?;
 
-    // 6. Build and activate on next boot — avoids switching mid-session on the target
+    // 6. Build and activate on next boot. Avoids switching mid-session on the target
     log::info!(
         "Building and deploying {} to {} (boot mode)...",
         nixos_configuration,
         target
     );
     rebuild(
-        &Some(nixos_configuration.to_string()),
+        &[nixos_configuration.to_string()],
+        &[],
         &RebuildMode::Boot,
-        &Some(target.to_string()),
-        &None,
-        true,
-        true,
-        false,
-        &None,
+        &Flags {
+            target_host: Some(target),
+            use_remote_sudo: true,
+            ask_sudo_password: true,
+            ..Flags::default()
+        },
     )?;
 
     // 7. Confirm and reboot
     let do_reboot = Confirm::new(&format!("Deployment complete. Reboot {} now?", target))
         .with_default(true)
-        .prompt()
-        .map_err(|_| SnowError::Env("prompt cancelled".to_string()))?;
+        .prompt()?;
 
     // A TTY so sudo can ask for the password, and a delayed reboot so the SSH session can exit cleanly
     if do_reboot {

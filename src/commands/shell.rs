@@ -51,7 +51,7 @@ pub(crate) fn shell(packages: &[String]) -> Result<()> {
     unsafe {
         std::env::set_var("NIXPKGS_ALLOW_UNFREE", "1");
     }
-    command.run_interactive()?;
+    command.run_verbose()?;
     Ok(())
 }
 

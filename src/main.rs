@@ -1,5 +1,6 @@
 use clap::Parser;
 use log::LevelFilter;
+use std::path::Path;
 use std::sync::OnceLock;
 
 mod util;
@@ -11,20 +12,26 @@ use options::*;
 static LOG_LEVEL: OnceLock<LevelFilter> = OnceLock::new();
 
 fn main() {
+    let mut argv = std::env::args_os();
+    if argv
+        .next()
+        .is_some_and(|name| Path::new(&name).file_name() == Some(ASKPASS_NAME.as_ref()))
+    {
+        run_askpass(argv.collect());
+    }
     let args = Args::parse();
 
-    LOG_LEVEL.get_or_init(|| {
-        if args.verbose {
-            LevelFilter::Debug
-        } else {
-            LevelFilter::Info
-        }
-    });
-    setup_logger(*LOG_LEVEL.get().unwrap());
+    let level = match args.verbose {
+        true => LevelFilter::Debug,
+        false => LevelFilter::Info,
+    };
+    LOG_LEVEL.get_or_init(|| level);
+    setup_logger(level);
 
     let result = match &args.command {
         Commands::Rebuild {
-            nixos_configuration,
+            selectors,
+            exclude,
             mode,
             target_host,
             build_host,
@@ -32,15 +39,22 @@ fn main() {
             ask_sudo_password,
             use_substitutes,
             target_port,
+            builders,
+            parallel,
         } => rebuild(
-            nixos_configuration,
+            selectors,
+            exclude,
             mode,
-            target_host,
-            build_host,
-            *use_remote_sudo,
-            *ask_sudo_password,
-            *use_substitutes,
-            target_port,
+            &Flags {
+                target_host: target_host.as_deref(),
+                build_host: build_host.as_deref(),
+                use_remote_sudo: *use_remote_sudo,
+                ask_sudo_password: *ask_sudo_password,
+                use_substitutes: *use_substitutes,
+                target_port: *target_port,
+                builders,
+                parallel: *parallel,
+            },
         ),
         Commands::Home { home_configuration } => home(home_configuration),
         Commands::Provision {
@@ -95,20 +109,26 @@ fn main() {
             prepare,
             target,
             nixos_configuration,
-        } => {
-            if *prepare {
-                assimilate_prepare()
-            } else {
-                assimilate_run(
-                    target.as_deref().unwrap(),
-                    nixos_configuration.as_deref().unwrap(),
-                )
+        } => match (prepare, target, nixos_configuration) {
+            (true, ..) => assimilate_prepare(),
+            (false, Some(target), Some(nixos_configuration)) => {
+                assimilate_run(target, nixos_configuration)
             }
-        }
+            _ => Err(SnowError::Env(
+                "assimilate needs a target and a nixosConfiguration".to_string(),
+            )),
+        },
     };
+    askpass_cleanup();
 
     if let Err(message) = result {
-        log::error!("{}", message);
+        if !matches!(message, SnowError::Reported) {
+            say(Tone::Bad, &message.to_string(), &[]);
+        }
         std::process::exit(1);
     }
+}
+
+fn verbose() -> bool {
+    LOG_LEVEL.get() == Some(&LevelFilter::Debug)
 }

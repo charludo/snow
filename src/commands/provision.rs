@@ -1,5 +1,5 @@
 use crate::{
-    RebuildMode, Result, SnowError, agenix_rekey,
+    Flags, RebuildMode, Result, SnowError, agenix_rekey,
     commands::{
         runners::SnowCommand,
         util::{SnowConfig, VmConfigResolved, wrap},
@@ -169,14 +169,10 @@ pub(crate) fn provision(
         );
     }
     rebuild(
-        &Some(vm_configuration.to_string()),
+        &[vm_configuration.to_string()],
+        &[],
         &RebuildMode::Boot,
-        &None,
-        &None,
-        false,
-        false,
-        false,
-        &None,
+        &Flags::default(),
     )?;
     unsafe {
         std::env::set_var("NIX_SSHOPTS", "");
@@ -188,16 +184,7 @@ pub(crate) fn provision(
 
     // OPTIONALLY: rebuild the local host to make its SSH handle available
     if rebuild_host {
-        rebuild(
-            &None,
-            &RebuildMode::Switch,
-            &None,
-            &None,
-            false,
-            false,
-            false,
-            &None,
-        )?;
+        rebuild(&[], &[], &RebuildMode::Switch, &Flags::default())?;
     }
 
     // OPTIONALLY: log the user into the new VM via SSH

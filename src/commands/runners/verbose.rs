@@ -1,6 +1,6 @@
 use super::SnowCommand;
 use crate::{SnowError, util::Result};
-use std::process::{Command, ExitStatus, Stdio};
+use std::process::{ExitStatus, Stdio};
 
 impl SnowCommand {
     pub(crate) fn run_verbose(&self) -> Result<()> {
@@ -19,9 +19,8 @@ impl SnowCommand {
 
     fn spawn_verbose(&self) -> Result<ExitStatus> {
         self.log();
-        let (command, args) = self.get_final_args();
-        let mut child = Command::new(command)
-            .args(args)
+        let mut child = self
+            .process()
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())

@@ -10,7 +10,7 @@ pub(crate) fn agenix_update_masterkeys() -> Result<()> {
         "agenix".to_string(),
         vec!["--extra-flake-params", "?submodules=1", "update-masterkeys"],
     );
-    command.run_interactive()?;
+    command.run_verbose()?;
     Ok(())
 }
 
@@ -19,7 +19,7 @@ pub(crate) fn agenix_edit(file: &str) -> Result<()> {
         "agenix".to_string(),
         vec!["--extra-flake-params", "?submodules=1", "edit", file],
     );
-    command.run_interactive()?;
+    command.run_verbose()?;
     Ok(())
 }
 
@@ -37,7 +37,7 @@ pub(crate) fn agenix_rekey(force: bool, dummy: bool) -> Result<()> {
         args.push("--dummy");
     }
     let command = SnowCommand::new_agenix("agenix".to_string(), args);
-    command.run_interactive()?;
+    command.run_verbose()?;
     Ok(())
 }
 

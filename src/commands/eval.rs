@@ -8,7 +8,7 @@ pub(crate) fn repl() -> Result<()> {
         vec!["repl", "--expr", "builtins.getFlake (toString ./.)"],
         false,
     );
-    command.run_interactive()?;
+    command.run_verbose()?;
     Ok(())
 }
 

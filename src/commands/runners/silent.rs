@@ -1,20 +1,17 @@
-use log::LevelFilter;
-
-use crate::{LOG_LEVEL, util::Result};
-use std::process::{Command, Stdio};
+use crate::{util::Result, verbose};
+use std::process::Stdio;
 
 use super::SnowCommand;
 
 impl SnowCommand {
     pub(crate) fn run_silent(&self) -> Result<()> {
-        if LOG_LEVEL.get() == Some(&LevelFilter::Debug) {
+        if verbose() {
             return self.run_verbose();
         }
         self.log();
 
-        let (command, args) = self.get_final_args();
-        let mut child = Command::new(command)
-            .args(args)
+        let mut child = self
+            .process()
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn()?;

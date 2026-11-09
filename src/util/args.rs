@@ -72,9 +72,10 @@ pub(crate) enum BumpSubcommands {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum Commands {
-    /// Rebuild the config for a given host, defaulting to the current host.
+    /// Rebuild the config for a given host, defaulting to the current host, or for all selected hosts, in parallel.
     Rebuild {
-        nixos_configuration: Option<String>,
+        /// Hosts and tags to rebuild. Supports `a+b` to select the intersection of tags, and `"*"` for all hosts.
+        selectors: Vec<String>,
 
         /// Rebuild mode.
         #[arg(long, short, value_enum, default_value_t = RebuildMode::Switch, display_order = 1)]
@@ -110,6 +111,24 @@ pub(crate) enum Commands {
         /// SSH [p]ort to use when connecting to the target or build host.
         #[arg(long, short = 'p', display_order = 7)]
         target_port: Option<u16>,
+
+        /// Remote [B]uilders to share build jobs with, as nixosConfiguration names or nix machine specs.
+        /// Takes precedence before --build-host and snow.buildMeOn.
+        #[arg(
+            long = "builder",
+            short = 'B',
+            conflicts_with = "build_host",
+            display_order = 8
+        )]
+        builders: Vec<String>,
+
+        /// How many hosts to rebuild in [P]arallel. Defaults to snow.parallel of this machine.
+        #[arg(long, short = 'P', display_order = 8)]
+        parallel: Option<usize>,
+
+        /// Hosts and tags to to e[x]clude. Supports `a+b` to deselect the intersection of tags.
+        #[arg(long, short = 'x', requires = "selectors", display_order = 9)]
+        exclude: Vec<String>,
     },
 
     /// Rebuild only the HomeManager config for the current user and host.

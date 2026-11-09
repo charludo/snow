@@ -73,6 +73,45 @@ with lib;
       '';
     };
 
+    parallel = mkOption {
+      type = types.ints.positive;
+      default = 4;
+      description = ''
+        How many hosts `snow rebuild` rebuilds at once when run on this machine.
+        Can be overridden with `--parallel` / `-P` on the command line
+      '';
+    };
+
+    builder = mkOption {
+      type = types.nullOr (
+        types.submodule {
+          options = {
+            maxJobs = mkOption {
+              type = types.nullOr types.ints.positive;
+              default = null;
+              description = ''
+                How many builds this machine takes at once as a remote builder.
+                If null, nix's default applies
+              '';
+            };
+
+            supportedFeatures = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              description = ''
+                The system features this machine supports as a remote builder
+              '';
+            };
+          };
+        }
+      );
+      default = null;
+      example = literalExpression "{ maxJobs = 16; }";
+      description = ''
+        How this machine takes builds when it is used as a remote builder via `snow rebuild -B <name>`
+      '';
+    };
+
     vm.id = mkOption {
       type = types.nullOr types.int;
       default = null;

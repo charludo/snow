@@ -29,3 +29,4 @@ pub(crate) use rebuild::*;
 pub(crate) use respec::*;
 pub(crate) use shell::*;
 pub(crate) use store::*;
+pub(crate) use util::{ASKPASS_NAME, Tone, askpass_cleanup, run_askpass, say};

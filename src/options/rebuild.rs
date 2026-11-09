@@ -10,3 +10,9 @@ pub enum RebuildMode {
     Boot,
     Build,
 }
+
+impl RebuildMode {
+    pub fn builds_only(&self) -> bool {
+        matches!(self, RebuildMode::Build)
+    }
+}

@@ -360,8 +360,7 @@ pub(crate) fn respec(vm_configuration: &str, reboot: bool, yes: bool) -> Result<
         let confirmed = yes
             || Confirm::new("Apply these changes?")
                 .with_default(false)
-                .prompt()
-                .unwrap_or_else(|_| std::process::exit(1));
+                .prompt()?;
         if !confirmed {
             return Ok(());
         }

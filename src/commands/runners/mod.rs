@@ -1,15 +1,18 @@
 mod checked;
-mod interactive;
 mod progress;
 mod silent;
 mod verbose;
 mod with_return;
 
+pub(super) use progress::{Deploy, Job, JobResult, Live};
+
 use std::fmt::Display;
+use std::process::Command;
 
 pub(super) struct SnowCommand {
     command: String,
     args: Vec<String>,
+    envs: Vec<(String, String)>,
     pub(super) requires_sudo: bool,
 }
 
@@ -18,6 +21,7 @@ impl SnowCommand {
         Self {
             command,
             args: args.iter().map(|x| x.to_string()).collect(),
+            envs: Vec::new(),
             requires_sudo,
         }
     }
@@ -38,20 +42,36 @@ impl SnowCommand {
         self.args.push(arg.to_string());
     }
 
-    fn get_final_args(&self) -> (String, Vec<String>) {
-        if self.requires_sudo {
-            let mut args = self.args.clone();
-            args.insert(0, self.command.clone());
-            ("sudo".to_string(), args)
-        } else {
-            (self.command.clone(), self.args.clone())
-        }
+    pub(crate) fn set_env(&mut self, key: &str, value: &str) {
+        self.envs.push((key.to_string(), value.to_string()));
+    }
+
+    fn process(&self) -> Command {
+        let mut process = match self.requires_sudo {
+            true => {
+                let mut process = Command::new("sudo");
+                process.arg(&self.command);
+                process
+            }
+            false => Command::new(&self.command),
+        };
+        process.args(&self.args).envs(self.envs.clone());
+        process
     }
 
     fn log(&self) {
         let style = anstyle::AnsiColor::Cyan.on_default();
         log::debug!("Running command: {style}{}{style:#}", self);
     }
+}
+
+fn nix_error(line: &str) -> String {
+    line.replace("error:", "")
+        .replace("Definition values:", "")
+        .trim()
+        .trim_start_matches('>')
+        .trim()
+        .to_string()
 }
 
 impl Display for SnowCommand {

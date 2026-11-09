@@ -1,6 +1,6 @@
 use crate::{commands::util::wrap, options::RebuildMode, util::Result};
 
-use super::{rebuild, runners::SnowCommand};
+use super::{Flags, rebuild, runners::SnowCommand};
 
 pub(crate) fn fmt() -> Result<()> {
     let command = SnowCommand::new_nix("nix".to_string(), vec!["fmt"], false);
@@ -16,16 +16,7 @@ pub(crate) fn clean(rebuild_after: bool) -> Result<()> {
     command.run_verbose()?;
 
     if rebuild_after {
-        return rebuild(
-            &None,
-            &RebuildMode::Boot,
-            &None,
-            &None,
-            false,
-            false,
-            false,
-            &None,
-        );
+        return rebuild(&[], &[], &RebuildMode::Boot, &Flags::default());
     }
 
     Ok(())

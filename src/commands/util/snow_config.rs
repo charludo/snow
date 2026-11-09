@@ -16,6 +16,7 @@ pub(crate) struct SnowConfig {
     pub(crate) build_host: Option<String>,
     pub(crate) build_me_on: Option<String>,
     pub(crate) target_port: Option<u16>,
+    pub(crate) parallel: usize,
 
     pub(crate) vm: Option<VmConfig>,
 }
@@ -65,6 +66,13 @@ impl SnowConfig {
             ))),
         }
     }
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct BuilderConfig {
+    pub(crate) max_jobs: Option<usize>,
+    pub(crate) supported_features: Vec<String>,
 }
 
 impl TryFrom<VmConfig> for VmConfigResolved {

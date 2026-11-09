@@ -17,13 +17,3 @@ pub(crate) fn setup_logger(level: LevelFilter) {
 
     log::trace!("Set up logging.");
 }
-
-#[macro_export]
-macro_rules! attempt {
-    ($e:expr) => {
-        if let Err(err) = $e {
-            log::error!("{}", err);
-            std::process::exit(1);
-        }
-    };
-}
